@@ -9,9 +9,12 @@ export class SiteGenerator {
   }
 
   async generate(vaultData: VaultData, outputPath: string): Promise<void> {
-    console.log("Starting site generation...");
-    console.log(`Files to process: ${vaultData.files.length}`);
-    
+    console.log("[SiteGenerator.generate] Starting site generation...");
+    console.log(`[SiteGenerator.generate] Files to process: ${vaultData.files.length}`);
+    console.log(`[SiteGenerator.generate] Output path (should be vault-relative): "${outputPath}"`);
+
+    await this.ensureBaseDirectory(outputPath);
+
     const startTime = Date.now();
     
     for (const file of vaultData.files) {
@@ -84,18 +87,24 @@ export class SiteGenerator {
 
   private wikiLinkToUrl(wikiLink: string): string {
     let url = wikiLink;
-    
+
     url = url.replace(/\s+/g, "-");
     url = url.toLowerCase();
-    url = encodeURIComponent(url);
-    
+    url = this.encodeUrlPath(url);
+
     if (this.plugin.settings.prettyUrls) {
       url = `/${url}/`;
     } else {
       url = `/${url}${this.plugin.settings.fileExtension}`;
     }
-    
+
     return url;
+  }
+
+  private encodeUrlPath(path: string): string {
+    return path.split('/')
+      .map(segment => encodeURIComponent(segment))
+      .join('/');
   }
 
   private processMarkdownSyntax(content: string): string {
@@ -217,12 +226,12 @@ export class SiteGenerator {
     return file.name.replace(/\.md$/i, "");
   }
 
-  private pathToUrl(path: string): string {
+private pathToUrl(path: string): string {
     let url = path.replace(/\.md$/i, "");
     url = url.replace(/\s+/g, "-");
     url = url.toLowerCase();
-    url = encodeURIComponent(url);
-    
+    url = this.encodeUrlPath(url);
+
     return url;
   }
 
@@ -272,10 +281,11 @@ export class SiteGenerator {
 </body>
 </html>`;
     
-    const indexPath = this.plugin.settings.prettyUrls 
-      ? `${outputPath}/index.html` 
+    const indexPath = this.plugin.settings.prettyUrls
+      ? `${outputPath}/index.html`
       : `${outputPath}/sitemap${this.plugin.settings.fileExtension}`;
-    
+
+    await this.ensureDirectory(outputPath, "index.html");
     await this.writeFile(indexPath, html);
     console.log("Generated index/sitemap");
   }
@@ -297,6 +307,7 @@ export class SiteGenerator {
 ${pages}
 </urlset>`;
     
+    await this.ensureDirectory(outputPath, "sitemap.xml");
     await this.writeFile(`${outputPath}/sitemap.xml`, sitemap);
     console.log("Generated sitemap.xml");
   }
@@ -307,6 +318,7 @@ Allow: /
 
 Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     
+    await this.ensureDirectory(outputPath, "robots.txt");
     await this.writeFile(`${outputPath}/robots.txt`, robotsTxt);
     console.log("Generated robots.txt");
   }
@@ -334,22 +346,64 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     console.log(`Copied ${attachments.length} attachments`);
   }
 
+  private async ensureBaseDirectory(outputPath: string): Promise<void> {
+    console.log(`[ensureBaseDirectory] Ensuring directory: "${outputPath}"`);
+    try {
+      const adapter = this.plugin.app.vault.adapter;
+
+      console.log(`[ensureBaseDirectory] Checking if directory exists...`);
+      const exists = await adapter.exists(outputPath);
+      console.log(`[ensureBaseDirectory] Directory exists: ${exists}`);
+
+      if (!exists) {
+        console.log(`[ensureBaseDirectory] Creating directory...`);
+        await adapter.mkdir(outputPath);
+
+        const verifyExists = await adapter.exists(outputPath);
+        console.log(`[ensureBaseDirectory] After mkdir, directory exists: ${verifyExists}`);
+      } else {
+        console.log(`[ensureBaseDirectory] Directory already exists`);
+      }
+    } catch (error) {
+      console.error(`[ensureBaseDirectory] Failed: "${outputPath}"`, error);
+      throw new Error(`Failed to create output directory: ${outputPath}. Error: ${error}`);
+    }
+  }
+
   private async ensureDirectory(basePath: string, relativePath: string): Promise<void> {
-    const path = basePath + "/" + relativePath.substring(0, relativePath.lastIndexOf("/"));
-    if (!path.endsWith(".html") && !path.endsWith(".xml") && !path.endsWith(".txt")) {
+    const lastSlashIndex = relativePath.lastIndexOf("/");
+    if (lastSlashIndex === -1) {
+      return;
+    }
+
+    const dirPart = relativePath.substring(0, lastSlashIndex);
+    const fullPath = basePath ? `${basePath}/${dirPart}` : dirPart;
+
+    console.log(`[ensureDirectory] Creating directory: "${fullPath}"`);
+
+    if (!fullPath.endsWith(".html") && !fullPath.endsWith(".xml") && !fullPath.endsWith(".txt") && !fullPath.endsWith(".css") && !fullPath.endsWith(".js")) {
       try {
-        await this.plugin.app.vault.adapter.mkdir(path);
+        await this.plugin.app.vault.adapter.mkdir(fullPath);
       } catch (error) {
+        console.warn(`[ensureDirectory] Failed to create directory: "${fullPath}"`, error);
       }
     }
   }
 
   private async writeFile(path: string, content: string): Promise<void> {
     const normalizedPath = path.replace(/\/+/g, "/");
+    console.log(`[writeFile] Writing: ${normalizedPath} (${content.length} bytes)`);
     try {
       await this.plugin.app.vault.adapter.write(normalizedPath, content);
+
+      const exists = await this.plugin.app.vault.adapter.exists(normalizedPath);
+      console.log(`[writeFile] Success. File exists on adapter: ${exists}`);
+
+      if (!exists) {
+        console.warn(`[writeFile] Write reported success but file doesn't exist in adapter`);
+      }
     } catch (error) {
-      console.error(`Failed to write file: ${normalizedPath}`, error);
+      console.error(`[writeFile] Failed: ${normalizedPath}`, error);
       throw error;
     }
   }

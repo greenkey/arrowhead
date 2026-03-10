@@ -50,8 +50,11 @@ export default class ArrowheadPlugin extends Plugin {
     this.addSettingTab(new ArrowheadSettingTab(this.app, this));
 
     this.registerVaultEvents();
-    
-    console.log("Arrowhead Static Site Generator loaded successfully");
+
+    const manifest = this.manifest || { version: "unknown" };
+    console.log(`Arrowhead Static Site Generator v${manifest.version} loaded successfully`);
+    console.log(`[Arrowhead] Vault: ${this.app.vault.getName()}`);
+    console.log(`[Arrowhead] Vault root: ${this.getVaultRootPath()}`);
   }
 
   onunload() {
@@ -72,16 +75,33 @@ export default class ArrowheadPlugin extends Plugin {
       return;
     }
 
+    console.log("[generateSite] Starting site generation");
+    console.log(`[generateSite] Current outputDirectory setting: "${this.settings.outputDirectory}"`);
+
+    const validation = await this.fileExporter.validateOutputPath();
+    console.log(`[generateSite] Validation result: ${JSON.stringify(validation)}`);
+
+    if (!validation.valid) {
+      new Notice(`Invalid output path: ${validation.error}`);
+      return;
+    }
+
     this.generationInProgress = true;
     new Notice("Generating static site...");
 
     try {
       const outputPath = await this.fileExporter.getAbsoluteOutputPath();
+      const relativeOutputPath = this.fileExporter.getRelativeOutputPath();
+
+      console.log(`[generateSite] Absolute path (for display): ${outputPath}`);
+      console.log(`[generateSite] Relative path (for adapter): "${relativeOutputPath}"`);
+
       const siteData = await this.vaultWalker.collectVaultData();
-      
-      await this.siteGenerator.generate(siteData, outputPath);
-      
-      new Notice(`Static site generated successfully!\nOutput: ${outputPath}`);
+      console.log(`[generateSite] Collected ${siteData.files.length} files from vault`);
+
+      await this.siteGenerator.generate(siteData, relativeOutputPath);
+
+      new Notice(`Static site generated successfully!\nLocation: ${outputPath}`);
     } catch (error) {
       console.error("Site generation failed:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -116,9 +136,47 @@ export default class ArrowheadPlugin extends Plugin {
   }
 
   getAdapter(): FileSystemAdapter | null {
-    if (this.app.vault.adapter instanceof FileSystemAdapter) {
-      return this.app.vault.adapter;
+    const adapter = this.app.vault.adapter;
+    if (!adapter) {
+      console.error("[getAdapter] No adapter available");
+      return null;
     }
-    return null;
+
+    if (adapter instanceof FileSystemAdapter) {
+      return adapter;
+    }
+
+    console.log("[getAdapter] Adapter is not FileSystemAdapter, attempting to use as-is");
+    return adapter as unknown as FileSystemAdapter;
+  }
+
+  getVaultRootPath(): string {
+    const adapter = this.getAdapter();
+    if (!adapter) {
+      throw new Error("Unable to access file system adapter");
+    }
+
+    const basePath = adapter.getBasePath();
+    const vaultName = this.app.vault.getName();
+
+    console.log(`[getVaultRootPath] basePath from adapter: "${basePath}"`);
+    console.log(`[getVaultRootPath] vault name: "${vaultName}"`);
+
+    if (basePath.endsWith(vaultName)) {
+      console.log(`[getVaultRootPath] ✓ basePath ends with vaultName, returning as-is`);
+      return basePath;
+    }
+
+    const potentialPath = `${basePath}/${vaultName}`;
+    console.log(`[getVaultRootPath] ✗ basePath doesn't end with vaultName`);
+    console.log(`[getVaultRootPath] Computed path: ${potentialPath}`);
+
+    if (basePath === "/") {
+      console.log(`[getVaultRootPath] basePath is root, returning vaultName directly`);
+      return vaultName;
+    }
+
+    console.log(`[getVaultRootPath] Returning computed path: ${potentialPath}`);
+    return potentialPath;
   }
 }

@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, TextComponent, DropdownComponent, ToggleComponent, ButtonComponent } from "obsidian";
 import ArrowheadPlugin from "../main";
-import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings";
+import { DEFAULT_SETTINGS, ArrowheadSettings, isAbsolutePath, validateOutputPath } from "./settings";
 
 export class ArrowheadSettingTab extends PluginSettingTab {
   plugin: ArrowheadPlugin;
@@ -13,6 +13,12 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+
+    const manifest = this.plugin.manifest || { version: "unknown" };
+    containerEl.createEl("div", {
+      text: `Arrowhead Static Site Generator v${manifest.version}`,
+      cls: "arrowhead-version"
+    });
 
     this.createSiteSettings(containerEl);
     this.createOutputSettings(containerEl);
@@ -46,15 +52,59 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
   private createOutputSettings(containerEl: HTMLElement): void {
     containerEl.createEl("h2", { text: "Output Settings" });
-    containerEl.createEl("p", { 
-      text: "Configure where and how your site is generated", 
-      cls: "setting-description" 
+    containerEl.createEl("p", {
+      text: "Configure where and how your site is generated",
+      cls: "setting-description"
     });
+
+    let resolvedPathDisplay: HTMLElement;
+
+    const vaultPath = this.plugin.getVaultRootPath();
+
+    let outputTextComponent: TextComponent | null = null;
 
     new Setting(containerEl)
       .setName("Output Directory")
-      .setDesc("Directory relative to vault root where files will be generated")
-      .addText(text => this.createTextSetting(text, "outputDirectory"));
+      .setDesc("Directory where generated files will be placed (absolute or relative to vault root)")
+      .addText(text => {
+        outputTextComponent = text;
+        text.setPlaceholder("public");
+        text.setValue(this.plugin.settings.outputDirectory);
+        text.onChange(async (value) => {
+          this.plugin.settings.outputDirectory = value.trim();
+          await this.plugin.saveSettings();
+          this.updateResolvedPathDisplay(text.getValue(), resolvedPathDisplay);
+        });
+      })
+      .addButton(button => {
+        button.setIcon("folder");
+        button.setTooltip("Choose folder");
+        button.onClick(async () => {
+          const filePicker = (this.app as unknown as { filePicker: { open(options: unknown): Promise<string[]> } }).filePicker;
+          const result = await filePicker.open({
+            defaultPath: this.plugin.settings.outputDirectory || "",
+            startPath: this.plugin.settings.outputDirectory || "",
+            submitButtonLabel: "Select",
+            multi: false,
+            fileOrFolders: "folders"
+          });
+          const selectedPath = result[0];
+          if (result && result.length > 0 && selectedPath && outputTextComponent) {
+            const settings = this.plugin.settings;
+            let pathToUse = selectedPath;
+            if (pathToUse.startsWith(vaultPath)) {
+              pathToUse = pathToUse.substring(vaultPath.length + 1);
+            }
+            outputTextComponent.setValue(pathToUse);
+            settings.outputDirectory = pathToUse.trim();
+            await this.plugin.saveSettings();
+            this.updateResolvedPathDisplay(pathToUse, resolvedPathDisplay);
+          }
+        });
+      });
+
+    resolvedPathDisplay = containerEl.createEl("div", { cls: "resolved-path-display" });
+    this.updateResolvedPathDisplay(this.plugin.settings.outputDirectory, resolvedPathDisplay);
 
     new Setting(containerEl)
       .setName("File Extension")
@@ -183,5 +233,36 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       settings[settingKey] = value;
       await this.plugin.saveSettings();
     });
+  }
+
+  private updateResolvedPathDisplay(inputPath: string, displayEl: HTMLElement): void {
+    const adapter = this.plugin.app.vault.adapter;
+    const vaultPath = (adapter as unknown as { getBasePath(): string }).getBasePath();
+    const validation = validateOutputPath(inputPath, vaultPath);
+
+    displayEl.empty();
+
+    if (inputPath && inputPath.trim().length > 0) {
+      const label = displayEl.createEl("span", {
+        text: `Resolved path: ${validation.resolvedPath}`,
+        cls: "settingResolvedPath"
+      });
+
+      if (validation.valid) {
+        label.style.color = "var(--text-success)";
+      } else {
+        label.style.color = "var(--text-error)";
+        label.createEl("br");
+        label.createEl("span", {
+          text: `Error: ${validation.error}`,
+          cls: "settingError"
+        });
+      }
+    } else {
+      displayEl.createEl("span", {
+        text: "Enter an output path above",
+        cls: "settingPlaceholder"
+      });
+    }
   }
 }

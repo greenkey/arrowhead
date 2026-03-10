@@ -17,8 +17,32 @@ export interface ArrowheadSettings {
   prettyUrls: boolean;
 }
 
+export function isAbsolutePath(path: string): boolean {
+  return path.startsWith("/") || path.startsWith("~") || /^[a-zA-Z]:/.test(path);
+}
+
+export function validateOutputPath(path: string, vaultPath: string): { valid: boolean; resolvedPath: string; error?: string } {
+  if (!path || path.trim().length === 0) {
+    return { valid: false, resolvedPath: "", error: "Output path cannot be empty" };
+  }
+
+  let resolvedPath: string;
+
+  if (isAbsolutePath(path)) {
+    resolvedPath = path.replace("~", process.env.HOME || "");
+  } else {
+    resolvedPath = `${vaultPath}/${path}`;
+  }
+
+  if (resolvedPath.includes("..")) {
+    return { valid: false, resolvedPath, error: "Output path cannot contain parent directory references (..)" };
+  }
+
+  return { valid: true, resolvedPath };
+}
+
 export const DEFAULT_SETTINGS: ArrowheadSettings = {
-  outputDirectory: "site-output",
+  outputDirectory: "public",
   templateName: "default",
   siteTitle: "My Obsidian Site",
   siteDescription: "A static website generated from my Obsidian vault",
