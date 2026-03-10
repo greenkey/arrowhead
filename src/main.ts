@@ -4,6 +4,8 @@ import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings/settings";
 import { SiteGenerator } from "./generators/site-generator";
 import { FileExporter } from "./exporters/file-exporter";
 import { VaultWalker } from "./utils/vault-walker";
+import { PreviewModal } from "./ui/preview-modal";
+import { startServer, stopServer, getServerUrl, isServerRunning } from "./utils/preview-server";
 
 export default class ArrowheadPlugin extends Plugin {
   settings: typeof DEFAULT_SETTINGS;
@@ -11,6 +13,8 @@ export default class ArrowheadPlugin extends Plugin {
   private fileExporter: FileExporter;
   private vaultWalker: VaultWalker;
   private generationInProgress: boolean = false;
+  private ribbonIcon: HTMLElement | null = null;
+  public autoRegenerateEnabled: boolean = false;
 
   async onload() {
     await this.loadSettings();
@@ -19,8 +23,8 @@ export default class ArrowheadPlugin extends Plugin {
     this.fileExporter = new FileExporter(this);
     this.vaultWalker = new VaultWalker(this);
 
-    this.addRibbonIcon("download", "Generate Static Site", async () => {
-      await this.generateSite();
+    this.ribbonIcon = this.addRibbonIcon("download", "Preview Static Site", async () => {
+      await this.togglePreview();
     });
 
     this.addCommand({
@@ -35,15 +39,15 @@ export default class ArrowheadPlugin extends Plugin {
       id: "generate-site-preview",
       name: "Preview Generated Site",
       callback: async () => {
-        await this.previewSite();
+        await this.togglePreview();
       }
     });
 
     this.addCommand({
-      id: "export-site-archive",
-      name: "Export Site as ZIP",
+      id: "open-preview-settings",
+      name: "Preview Settings",
       callback: async () => {
-        await this.exportArchive();
+        new PreviewModal(this.app, this).open();
       }
     });
 
@@ -57,7 +61,59 @@ export default class ArrowheadPlugin extends Plugin {
     console.log(`[Arrowhead] Vault root: ${this.getVaultRootPath()}`);
   }
 
+  public updateRibbonIcon(): void {
+    if (!this.ribbonIcon) return;
+    
+    if (isServerRunning()) {
+      this.ribbonIcon.setAttribute("aria-label", "Stop Preview Server");
+      this.ribbonIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+    } else {
+      this.ribbonIcon.setAttribute("aria-label", "Preview Static Site");
+      this.ribbonIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+    }
+  }
+
+  private async togglePreview(): Promise<void> {
+    if (isServerRunning()) {
+      await stopServer();
+      this.updateRibbonIcon();
+      new Notice("Preview server stopped");
+    } else {
+      await this.startPreview();
+    }
+  }
+
+  private async startPreview(): Promise<void> {
+    const fileExporter = new FileExporter(this);
+    
+    new Notice("Generating site for preview...");
+    
+    await this.generateSite();
+    
+    try {
+      const validation = await fileExporter.validateOutputPath();
+      
+      if (!validation.valid) {
+        new Notice(`Invalid output path: ${validation.error}`);
+        return;
+      }
+
+      const outputPath = await fileExporter.getAbsoluteOutputPath();
+      await startServer(outputPath, this.settings.previewServerPort);
+      const url = getServerUrl();
+      
+      window.open(url, "_blank");
+      
+      this.updateRibbonIcon();
+      new Notice(`Preview opened at ${url}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      new Notice(`Failed to start preview: ${errorMessage}`);
+    }
+  }
+
   onunload() {
+    stopServer();
     console.log("Arrowhead Static Site Generator unloaded");
   }
 
@@ -111,18 +167,25 @@ export default class ArrowheadPlugin extends Plugin {
     }
   }
 
-  private async previewSite(): Promise<void> {
-    new Notice("Preview functionality coming soon!");
-  }
-
   private async exportArchive(): Promise<void> {
     new Notice("Archive export functionality coming soon!");
   }
 
+  private debounceTimer: NodeJS.Timeout | null = null;
+
   private registerVaultEvents(): void {
     this.registerEvent(this.app.vault.on("modify", async (file) => {
-      if (this.settings.generateIndex && file.name.endsWith(".md")) {
-        console.log(`File modified: ${file.path}`);
+      if (this.autoRegenerateEnabled && file.name.endsWith(".md")) {
+        console.log(`File modified: ${file.path}, auto-regenerating...`);
+        
+        if (this.debounceTimer) {
+          clearTimeout(this.debounceTimer);
+        }
+        
+        this.debounceTimer = setTimeout(async () => {
+          await this.generateSite();
+          new Notice("Site auto-regenerated");
+        }, 1000);
       }
     }));
 

@@ -24,6 +24,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
     this.createOutputSettings(containerEl);
     this.createTemplateSettings(containerEl);
     this.createGenerationSettings(containerEl);
+    this.createPreviewSettings(containerEl);
     this.createAdvancedSettings(containerEl);
   }
 
@@ -194,6 +195,47 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       .setName("Process Embeds")
       .setDesc("Handle [[Image]] and other embeds")
       .addToggle(toggle => this.createToggleSetting(toggle, "processEmbeds"));
+  }
+
+  private createPreviewSettings(containerEl: HTMLElement): void {
+    containerEl.createEl("h2", { text: "Preview Settings" });
+    containerEl.createEl("p", { 
+      text: "Configure the in-app preview functionality", 
+      cls: "setting-description" 
+    });
+
+    new Setting(containerEl)
+      .setName("Preview Server Port")
+      .setDesc("Port for the local preview server (default: 3456)")
+      .addText(text => {
+        text.setPlaceholder("3456");
+        text.setValue(String(this.plugin.settings.previewServerPort));
+        text.onChange(async (value) => {
+          const port = parseInt(value, 10);
+          if (!isNaN(port) && port > 0 && port < 65536) {
+            this.plugin.settings.previewServerPort = port;
+            await this.plugin.saveSettings();
+          }
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Live Reload")
+      .setDesc("Automatically refresh preview when site is regenerated")
+      .addToggle(toggle => this.createToggleSetting(toggle, "previewLiveReload"));
+
+    new Setting(containerEl)
+      .setName("Preview Mode")
+      .setDesc("Choose how to preview your site")
+      .addDropdown(dropdown => {
+        dropdown.addOption("iframe", "In-app (iframe)");
+        dropdown.addOption("browser", "External Browser");
+        dropdown.setValue(this.plugin.settings.previewMode);
+        dropdown.onChange(async (value) => {
+          this.plugin.settings.previewMode = value as "iframe" | "browser";
+          await this.plugin.saveSettings();
+        });
+      });
   }
 
   private createAdvancedSettings(containerEl: HTMLElement): void {

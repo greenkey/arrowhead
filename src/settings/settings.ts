@@ -15,6 +15,9 @@ export interface ArrowheadSettings {
   ignoredFolders: string[];
   fileExtension: string;
   prettyUrls: boolean;
+  previewServerPort: number;
+  previewLiveReload: boolean;
+  previewMode: "iframe" | "browser";
 }
 
 export function isAbsolutePath(path: string): boolean {
@@ -57,5 +60,8 @@ export const DEFAULT_SETTINGS: ArrowheadSettings = {
   customJsPath: "",
   ignoredFolders: [],
   fileExtension: ".html",
-  prettyUrls: true
+  prettyUrls: true,
+  previewServerPort: 3456,
+  previewLiveReload: true,
+  previewMode: "iframe"
 };
