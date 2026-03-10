@@ -1,6 +1,7 @@
 export { default as ArrowheadPlugin } from "./main";
 export { ArrowheadSettingTab } from "./settings/settings-tab";
-export type { ArrowheadSettings, DEFAULT_SETTINGS } from "./settings/settings";
+export type { ArrowheadSettings } from "./settings/settings";
+export { DEFAULT_SETTINGS } from "./settings/settings";
 export { SiteGenerator } from "./generators/site-generator";
 export { VaultWalker } from "./utils/vault-walker";
 export { PathResolver } from "./utils/path-resolver";
@@ -11,3 +12,4 @@ export { TemplateEngine } from "./utils/template-engine";
 export { FileExporter } from "./exporters/file-exporter";
 export { ExportModal } from "./ui/export-modal";
 export { PreviewModal } from "./ui/preview-modal";
+export * from "./types";

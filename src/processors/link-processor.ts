@@ -1,6 +1,6 @@
 import ArrowheadPlugin from "../main";
-import { VaultData, VaultFile } from "./vault-walker";
-import { PathResolver } from "./path-resolver";
+import { VaultData, VaultFile } from "../utils/vault-walker";
+import { PathResolver } from "../utils/path-resolver";
 
 export class LinkProcessor {
   private plugin: ArrowheadPlugin;

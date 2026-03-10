@@ -133,6 +133,8 @@ export class VaultWalker {
     const tags = this.extractTags(frontmatter, content);
     const links = this.extractLinks(content, metadata);
     
+    const stat = file.stat;
+    
     return {
       path: file.path,
       name: file.name,
@@ -142,9 +144,9 @@ export class VaultWalker {
       tags: tags,
       links: links,
       embeds: this.extractEmbeds(content),
-      created: file.stat.ctime,
-      modified: file.stat.mtime,
-      size: file.stat.size
+      created: stat.ctime,
+      modified: stat.mtime,
+      size: stat.size
     };
   }
 
@@ -173,7 +175,7 @@ export class VaultWalker {
     let match;
     
     while ((match = wikiLinkRegex.exec(content)) !== null) {
-      const target = match[1].trim();
+      const target = match[1]?.trim() ?? "";
       const displayText = match[2]?.trim();
       const linkText = match[0];
       
@@ -196,8 +198,8 @@ export class VaultWalker {
     
     const urlRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
     while ((match = urlRegex.exec(content)) !== null) {
-      const text = match[1].trim();
-      const url = match[2].trim();
+      const text = match[1]?.trim() ?? "";
+      const url = match[2]?.trim() ?? "";
       
       if (!url.startsWith("file://") && !url.startsWith("#")) {
         links.push({
@@ -218,13 +220,18 @@ export class VaultWalker {
     let match;
     
     while ((match = embedRegex.exec(content)) !== null) {
-      embeds.push(match[1]);
+      const embedTarget = match[1];
+      if (embedTarget) {
+        embeds.push(embedTarget);
+      }
     }
     
     return embeds;
   }
 
   private resolveLinkType(sourcePath: string, targetPath: string): "internal" | "external" | "broken" {
+    if (!targetPath || typeof targetPath !== "string") return "broken";
+    
     const vault = this.plugin.app.vault;
     
     if (targetPath.startsWith("http")) {
@@ -238,6 +245,8 @@ export class VaultWalker {
   }
 
   private normalizePath(sourcePath: string, targetPath: string): string {
+    if (!targetPath || typeof targetPath !== "string") return "";
+    
     const sourceFolder = sourcePath.substring(0, sourcePath.lastIndexOf("/"));
     let normalized = targetPath;
     

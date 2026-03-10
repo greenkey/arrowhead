@@ -29,14 +29,17 @@ export class FileExporter {
         const files = await this.listFilesRecursive(outputPath);
         
         for (const file of files) {
-          await adapter.rm(file);
+          try {
+            await adapter.remove(file);
+          } catch (e) {
+          }
         }
         
         const dirs = await this.listDirectoriesRecursive(outputPath);
         for (const dir of dirs) {
           try {
-            await adapter.rmdir(dir);
-          } catch (error) {
+            await adapter.rmdir(dir, true);
+          } catch (e) {
           }
         }
       }

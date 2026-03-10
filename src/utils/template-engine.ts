@@ -58,7 +58,7 @@ export class TemplateEngine {
           let itemContent = content;
           
           if (typeof item === "object" && item !== null) {
-            itemContent = itemContent.replace(/\{\{(\w+)\}\}/g, (_, propKey) => {
+            itemContent = itemContent.replace(/\{\{(\w+)\}\}/g, (_match: string, propKey: string) => {
               return String((item as Record<string, unknown>)[propKey] ?? "");
             });
           }

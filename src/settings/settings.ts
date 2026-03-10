@@ -1,4 +1,4 @@
-export default interface ArrowheadSettings {
+export interface ArrowheadSettings {
   outputDirectory: string;
   templateName: string;
   siteTitle: string;

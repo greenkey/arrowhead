@@ -74,8 +74,12 @@ export class MarkdownProcessor {
     const listGroupRegex = /(<li class="list-item">.*<\/li>\n?)+/g;
     processed = processed.replace(listGroupRegex, (match) => {
       const items = match.trim().split("\n").filter(Boolean);
-      const tag = items[0].startsWith("<ol") ? "ol" : "ul";
-      return `<${tag class="list">\n${items.join("\n")}\n</${tag}>`;
+      const firstItem = items[0];
+      if (!firstItem) return match;
+      const isOrdered = firstItem.startsWith("<ol");
+      const tagStart = isOrdered ? "<ol class=\"list\">" : "<ul class=\"list\">";
+      const closingTag = isOrdered ? "</ol>" : "</ul>";
+      return tagStart + "\n" + items.join("\n") + "\n" + closingTag;
     });
     
     return processed;
@@ -86,7 +90,9 @@ export class MarkdownProcessor {
     
     return content.replace(tableRegex, (match) => {
       const rows = match.trim().split("\n");
+      if (rows.length === 0) return match;
       const headerRow = rows[0];
+      if (!headerRow) return match;
       const headerCells = headerRow.split("|").slice(1, -1).map(cell => 
         `<th>${cell.trim()}</th>`
       ).join("");

@@ -1,6 +1,6 @@
-import { App, PluginSettingTab, Setting, TextComponent, DropdownComponent, ToggleComponent, DirectoryPickerComponent, ButtonComponent } from "obsidian";
+import { App, PluginSettingTab, Setting, TextComponent, DropdownComponent, ToggleComponent, ButtonComponent } from "obsidian";
 import ArrowheadPlugin from "../main";
-import { DEFAULT_SETTINGS } from "./settings";
+import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings";
 
 export class ArrowheadSettingTab extends PluginSettingTab {
   plugin: ArrowheadPlugin;
@@ -166,19 +166,21 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       });
   }
 
-  private createTextSetting(text: TextComponent, settingKey: keyof typeof DEFAULT_SETTINGS): void {
+  private createTextSetting(text: TextComponent, settingKey: keyof ArrowheadSettings): void {
+    const settings = this.plugin.settings as unknown as Record<string, unknown>;
     text.setPlaceholder(DEFAULT_SETTINGS[settingKey] as string);
-    text.setValue(this.plugin.settings[settingKey] as string);
+    text.setValue(settings[settingKey] as string);
     text.onChange(async (value) => {
-      this.plugin.settings[settingKey] = value;
+      settings[settingKey] = value;
       await this.plugin.saveSettings();
     });
   }
 
-  private createToggleSetting(toggle: ToggleComponent, settingKey: keyof typeof DEFAULT_SETTINGS): void {
-    toggle.setValue(this.plugin.settings[settingKey] as boolean);
+  private createToggleSetting(toggle: ToggleComponent, settingKey: keyof ArrowheadSettings): void {
+    const settings = this.plugin.settings as unknown as Record<string, unknown>;
+    toggle.setValue(settings[settingKey] as boolean);
     toggle.onChange(async (value) => {
-      this.plugin.settings[settingKey] = value;
+      settings[settingKey] = value;
       await this.plugin.saveSettings();
     });
   }

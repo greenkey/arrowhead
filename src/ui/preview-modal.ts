@@ -30,14 +30,14 @@ export class PreviewModal extends Modal {
     
     new Setting(contentEl)
       .addButton(btn => {
-        btn.setText("Open Preview (Coming Soon)");
+        btn.setButtonText("Open Preview (Coming Soon)");
         btn.setDisabled(true);
         btn.buttonEl.addClass("coming-soon");
       });
     
     new Setting(contentEl)
       .addButton(btn => {
-        btn.setText("Close");
+        btn.setButtonText("Close");
         btn.onClick(() => {
           this.close();
         });

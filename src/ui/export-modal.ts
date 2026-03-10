@@ -39,21 +39,21 @@ export class ExportModal extends Modal {
     
     new Setting(contentEl)
       .addButton(btn => {
-        btn.setText("Generate Site");
+        btn.setButtonText("Generate Site");
         btn.setCta();
         btn.onClick(async () => {
-          await this.generateSite();
+          await this.runGeneration();
         });
       })
       .addButton(btn => {
-        btn.setText("Close");
+        btn.setButtonText("Close");
         btn.onClick(() => {
           this.close();
         });
       });
   }
 
-  private async generateSite() {
+  private async runGeneration() {
     this.statusEl.empty();
     this.statusEl.createEl("p", { text: "Generating site... Please wait." });
     
@@ -64,8 +64,9 @@ export class ExportModal extends Modal {
         cls: "success-message"
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       this.statusEl.createEl("p", { 
-        text: `Error: ${error.message}`,
+        text: `Error: ${errorMessage}`,
         cls: "error-message"
       });
     }

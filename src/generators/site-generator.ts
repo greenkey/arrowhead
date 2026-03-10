@@ -1,5 +1,5 @@
 import ArrowheadPlugin from "../main";
-import { VaultData, VaultFile } from "./vault-walker";
+import { VaultData, VaultFile } from "../utils/vault-walker";
 
 export class SiteGenerator {
   private plugin: ArrowheadPlugin;
@@ -38,20 +38,20 @@ export class SiteGenerator {
     console.log(`Site generation completed in ${elapsed}ms`);
   }
 
-  private async generatePage(file: VaultFile, vaultData: VaultData, outputPath: string): Promise<void> {
-    const pageContent = this.processMarkdown(file.content);
-    const processedLinks = this.processLinks(file, vaultData);
-    const processedEmbeds = this.processEmbeds(file, vaultData);
+  private async generatePage(fileData: VaultFile, vaultData: VaultData, outputPath: string): Promise<void> {
+    const pageContent = this.processMarkdown(fileData.content);
+    const processedLinks = this.processLinks(fileData, vaultData);
+    const processedEmbeds = this.processEmbeds(fileData, vaultData);
     
     const html = this.wrapInTemplate({
-      title: this.getTitle(file),
+      title: this.getTitle(fileData),
       content: processedEmbeds,
-      frontmatter: file.frontmatter,
-      tags: file.tags,
-      lastModified: new Date(file.modified).toISOString()
+      frontmatter: fileData.frontmatter,
+      tags: fileData.tags,
+      lastModified: new Date(fileData.modified).toISOString()
     });
     
-    const relativePath = this.pathToUrl(file.path);
+    const relativePath = this.pathToUrl(fileData.path);
     const outputFilePath = this.getOutputPath(relativePath);
     
     await this.ensureDirectory(outputPath, outputFilePath);
@@ -322,8 +322,8 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
       
       try {
         const vault = this.plugin.app.vault;
-        const file = vault.getAbstractFileByPath(attachment.path);
-        if (file) {
+        const vaultFile = vault.getAbstractFileByPath(attachment.path);
+        if (vaultFile) {
           await vault.adapter.copy(attachment.path, targetPath);
         }
       } catch (error) {

@@ -1,5 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, TFolder, FileSystemAdapter, Workspace } from "obsidian";
-import { ArrowheadSettingTab, DEFAULT_SETTINGS } from "./settings/settings";
+import { ArrowheadSettingTab } from "./settings/settings-tab";
+import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings/settings";
 import { SiteGenerator } from "./generators/site-generator";
 import { FileExporter } from "./exporters/file-exporter";
 import { VaultWalker } from "./utils/vault-walker";
@@ -65,7 +66,7 @@ export default class ArrowheadPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  private async generateSite(): Promise<void> {
+  async generateSite(): Promise<void> {
     if (this.generationInProgress) {
       new Notice("Site generation already in progress");
       return;
@@ -83,7 +84,8 @@ export default class ArrowheadPlugin extends Plugin {
       new Notice(`Static site generated successfully!\nOutput: ${outputPath}`);
     } catch (error) {
       console.error("Site generation failed:", error);
-      new Notice(`Failed to generate site: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      new Notice(`Failed to generate site: ${errorMessage}`);
     } finally {
       this.generationInProgress = false;
     }
