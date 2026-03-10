@@ -1,0 +1,35 @@
+{
+  "name": "arrowhead-obsidian-plugin",
+  "version": "1.0.0",
+  "description": "Convert your Obsidian vault to a complete static website with customizable themes and export options.",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "obsidian",
+    "static-site-generator",
+    "export",
+    "publish",
+    "website"
+  ],
+  "author": "Arrowhead",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-obsidianmd": "^0.1.9",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "obsidian": "^1.5.0"
+  }
+}
