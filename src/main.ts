@@ -4,7 +4,6 @@ import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings/settings";
 import { SiteGenerator } from "./generators/site-generator";
 import { FileExporter } from "./exporters/file-exporter";
 import { VaultWalker } from "./utils/vault-walker";
-import { PreviewModal } from "./ui/preview-modal";
 import { startServer, stopServer, getServerUrl, isServerRunning } from "./utils/preview-server";
 
 export default class ArrowheadPlugin extends Plugin {
@@ -14,7 +13,6 @@ export default class ArrowheadPlugin extends Plugin {
   private vaultWalker: VaultWalker;
   private generationInProgress: boolean = false;
   private ribbonIcon: HTMLElement | null = null;
-  public autoRegenerateEnabled: boolean = false;
 
   async onload() {
     await this.loadSettings();
@@ -25,6 +23,12 @@ export default class ArrowheadPlugin extends Plugin {
 
     this.ribbonIcon = this.addRibbonIcon("download", "Preview Static Site", async () => {
       await this.togglePreview();
+    });
+
+    this.addRibbonIcon("gear", "Arrowhead Settings", () => {
+      const app = this.app as unknown as { setting: { open(): void; openTabById(id: string): void } };
+      app.setting.open();
+      app.setting.openTabById("arrowhead-obsidian-plugin");
     });
 
     this.addCommand({
@@ -40,14 +44,6 @@ export default class ArrowheadPlugin extends Plugin {
       name: "Preview Generated Site",
       callback: async () => {
         await this.togglePreview();
-      }
-    });
-
-    this.addCommand({
-      id: "open-preview-settings",
-      name: "Preview Settings",
-      callback: async () => {
-        new PreviewModal(this.app, this).open();
       }
     });
 
@@ -119,6 +115,10 @@ export default class ArrowheadPlugin extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    
+    if (this.settings.siteTitle === DEFAULT_SETTINGS.siteTitle) {
+      this.settings.siteTitle = this.app.vault.getName();
+    }
   }
 
   async saveSettings() {
@@ -175,7 +175,7 @@ export default class ArrowheadPlugin extends Plugin {
 
   private registerVaultEvents(): void {
     this.registerEvent(this.app.vault.on("modify", async (file) => {
-      if (this.autoRegenerateEnabled && file.name.endsWith(".md")) {
+      if (this.settings.autoRegenerate && file.name.endsWith(".md")) {
         console.log(`File modified: ${file.path}, auto-regenerating...`);
         
         if (this.debounceTimer) {

@@ -26,14 +26,7 @@ export class PathResolver {
       return segment.toLowerCase().replace(/\s+/g, "-");
     }).join("/");
     
-    if (this.plugin.settings.prettyUrls) {
-      if (targetPath === "" || targetPath.endsWith("/")) {
-        targetPath = targetPath + "index";
-      }
-      return "/" + targetPath + "/";
-    }
-    
-    return "/" + targetPath + this.plugin.settings.fileExtension;
+    return "/" + targetPath + ".html";
   }
 
   resolveToPath(wikiLink: string, sourcePath: string): string {

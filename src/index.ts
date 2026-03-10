@@ -11,5 +11,4 @@ export { AssetProcessor } from "./processors/asset-processor";
 export { TemplateEngine } from "./utils/template-engine";
 export { FileExporter } from "./exporters/file-exporter";
 export { ExportModal } from "./ui/export-modal";
-export { PreviewModal } from "./ui/preview-modal";
 export * from "./types";

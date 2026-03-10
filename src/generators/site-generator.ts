@@ -92,11 +92,7 @@ export class SiteGenerator {
     url = url.toLowerCase();
     url = this.encodeUrlPath(url);
 
-    if (this.plugin.settings.prettyUrls) {
-      url = `/${url}/`;
-    } else {
-      url = `/${url}${this.plugin.settings.fileExtension}`;
-    }
+    url = `/${url}.html`;
 
     return url;
   }
@@ -236,10 +232,7 @@ private pathToUrl(path: string): string {
   }
 
   private getOutputPath(relativePath: string): string {
-    if (this.plugin.settings.prettyUrls) {
-      return `${relativePath}/index${this.plugin.settings.fileExtension}`;
-    }
-    return `${relativePath}${this.plugin.settings.fileExtension}`;
+    return `${relativePath}.html`;
   }
 
   private async generateIndex(vaultData: VaultData, outputPath: string): Promise<void> {
@@ -281,9 +274,7 @@ private pathToUrl(path: string): string {
 </body>
 </html>`;
     
-    const indexPath = this.plugin.settings.prettyUrls
-      ? `${outputPath}/index.html`
-      : `${outputPath}/sitemap${this.plugin.settings.fileExtension}`;
+    const indexPath = `${outputPath}/sitemap.html`;
 
     await this.ensureDirectory(outputPath, "index.html");
     await this.writeFile(indexPath, html);

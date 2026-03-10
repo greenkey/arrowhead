@@ -106,24 +106,6 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     resolvedPathDisplay = containerEl.createEl("div", { cls: "resolved-path-display" });
     this.updateResolvedPathDisplay(this.plugin.settings.outputDirectory, resolvedPathDisplay);
-
-    new Setting(containerEl)
-      .setName("File Extension")
-      .setDesc("Extension for generated HTML files")
-      .addDropdown(dropdown => {
-        dropdown.addOption(".html", ".html");
-        dropdown.addOption(".htm", ".htm");
-        dropdown.setValue(this.plugin.settings.fileExtension);
-        dropdown.onChange(async (value) => {
-          this.plugin.settings.fileExtension = value;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName("Pretty URLs")
-      .setDesc("Generate clean URLs like /page/ instead of /page.html")
-      .addToggle(toggle => this.createToggleSetting(toggle, "prettyUrls"));
   }
 
   private createTemplateSettings(containerEl: HTMLElement): void {
@@ -131,6 +113,11 @@ export class ArrowheadSettingTab extends PluginSettingTab {
     containerEl.createEl("p", { 
       text: "Customize the appearance of your generated site", 
       cls: "setting-description" 
+    });
+
+    containerEl.createEl("div", {
+      text: "⚠️ Beta: Template system is under active development",
+      cls: "arrowhead-beta-warning"
     });
 
     new Setting(containerEl)
@@ -225,17 +212,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       .addToggle(toggle => this.createToggleSetting(toggle, "previewLiveReload"));
 
     new Setting(containerEl)
-      .setName("Preview Mode")
-      .setDesc("Choose how to preview your site")
-      .addDropdown(dropdown => {
-        dropdown.addOption("iframe", "In-app (iframe)");
-        dropdown.addOption("browser", "External Browser");
-        dropdown.setValue(this.plugin.settings.previewMode);
-        dropdown.onChange(async (value) => {
-          this.plugin.settings.previewMode = value as "iframe" | "browser";
-          await this.plugin.saveSettings();
-        });
-      });
+      .setName("Auto-regenerate on change")
+      .setDesc("Automatically regenerate site when vault files change")
+      .addToggle(toggle => this.createToggleSetting(toggle, "autoRegenerate"));
   }
 
   private createAdvancedSettings(containerEl: HTMLElement): void {
