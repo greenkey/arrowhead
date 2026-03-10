@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  {{#if description}}
+  <meta name="description" content="{{description}}">
+  {{/if}}
+  <meta name="generator" content="Arrowhead Static Site Generator">
+  <title>{{title}} | {{siteTitle}}</title>
+  <link rel="stylesheet" href="styles.css">
+  {{#if customCss}}
+  <link rel="stylesheet" href="{{customCss}}">
+  {{/if}}
+</head>
+<body>
+  {{> header}}
+  
+  <main class="site-content">
+    {{> breadcrumb}}
+    
+    <article class="markdown-body">
+      {{content}}
+    </article>
+    
+    {{#if tags}}
+    <footer class="article-footer">
+      <div class="tags">
+        <span class="tags-label">Tags:</span>
+        {{#each tags}}
+        <span class="tag">{{this}}</span>
+        {{/each}}
+      </div>
+    </footer>
+    {{/if}}
+  </main>
+  
+  {{> footer}}
+</body>
+</html>
