@@ -12,9 +12,8 @@ export default class ArrowheadPlugin extends Plugin {
   public fileExporter: FileExporter;
   private vaultWalker: VaultWalker;
   private generationInProgress: boolean = false;
-  private syncRibbonIcon: HTMLElement | null = null;
   private previewRibbonIcon: HTMLElement | null = null;
-  private serverStatusRibbonIcon: HTMLElement | null = null;
+  private liveModeRibbonIcon: HTMLElement | null = null;
   private stoppingInProgress: boolean = false;
 
   async onload() {
@@ -28,16 +27,11 @@ export default class ArrowheadPlugin extends Plugin {
       await this.openPreview();
     });
 
-    this.serverStatusRibbonIcon = this.addRibbonIcon("circle", "Server Status", async () => {
-      await this.toggleServer();
+    this.liveModeRibbonIcon = this.addRibbonIcon("cloud", "Live Mode", async () => {
+      await this.toggleLiveMode();
     });
 
-    this.syncRibbonIcon = this.addRibbonIcon("refresh-cw", "Activate Automatic Generation", async () => {
-      await this.toggleAutoGeneration();
-    });
-
-    this.updateServerStatusIcon();
-    this.updateSyncRibbonIcon();
+    this.updateLiveModeIcon();
 
     this.addRibbonIcon("gear", "Arrowhead Settings", () => {
       const app = this.app as unknown as { setting: { open(): void; openTabById(id: string): void } };
@@ -71,51 +65,18 @@ export default class ArrowheadPlugin extends Plugin {
     console.log(`[Arrowhead] Vault root: ${this.getVaultRootPath()}`);
   }
 
-  public updateServerStatusIcon(): void {
-    if (!this.serverStatusRibbonIcon) return;
+  public updateLiveModeIcon(): void {
+    if (!this.liveModeRibbonIcon) return;
     
-    if (isServerRunning()) {
-      this.serverStatusRibbonIcon.setAttribute("aria-label", "Server Running - Click to Stop");
-      this.serverStatusRibbonIcon.style.color = "var(--text-success)";
-    } else {
-      this.serverStatusRibbonIcon.setAttribute("aria-label", "Server Stopped - Click to Start");
-      this.serverStatusRibbonIcon.style.color = "";
-    }
-  }
-
-  public updateSyncRibbonIcon(): void {
-    if (!this.syncRibbonIcon) return;
+    const isLive = isServerRunning() && this.settings.autoRegenerate;
     
-    if (this.settings.autoRegenerate) {
-      this.syncRibbonIcon.setAttribute("aria-label", "Automatic Generation Active - Click to Disable");
-      this.syncRibbonIcon.style.color = "var(--text-success)";
+    if (isLive) {
+      this.liveModeRibbonIcon.setAttribute("aria-label", "Live Mode Active - Click to Stop");
+      this.liveModeRibbonIcon.style.color = "var(--text-success)";
     } else {
-      this.syncRibbonIcon.setAttribute("aria-label", "Automatic Generation Inactive - Click to Enable");
-      this.syncRibbonIcon.style.color = "var(--text-muted)";
+      this.liveModeRibbonIcon.setAttribute("aria-label", "Live Mode Inactive - Click to Start");
+      this.liveModeRibbonIcon.style.color = "";
     }
-  }
-
-  private async toggleAutoGeneration(): Promise<void> {
-    this.settings.autoRegenerate = !this.settings.autoRegenerate;
-    await this.saveSettings();
-    this.updateSyncRibbonIcon();
-    
-    if (this.settings.autoRegenerate) {
-      new Notice("Automatic generation enabled");
-      if (this.generationInProgress) return;
-      await this.generateSite();
-    } else {
-      new Notice("Automatic generation disabled");
-    }
-  }
-
-  private async activateAutomaticGeneration(): Promise<void> {
-    if (this.generationInProgress) {
-      new Notice("Generation already in progress");
-      return;
-    }
-
-    await this.generateSite();
   }
 
   private async openPreview(): Promise<void> {
@@ -131,7 +92,14 @@ export default class ArrowheadPlugin extends Plugin {
     
     if (!isServerRunning()) {
       await startServer(outputPath, this.settings.previewServerPort);
-      this.updateServerStatusIcon();
+      this.updateLiveModeIcon();
+    }
+    
+    if (!this.settings.autoRegenerate) {
+      this.settings.autoRegenerate = true;
+      await this.saveSettings();
+      this.updateLiveModeIcon();
+      await this.generateSite();
     }
     
     const url = getServerUrl();
@@ -139,16 +107,19 @@ export default class ArrowheadPlugin extends Plugin {
     new Notice(`Preview opened at ${url}`);
   }
 
-  private async toggleServer(): Promise<void> {
+  private async toggleLiveMode(): Promise<void> {
     if (this.stoppingInProgress) return;
     
-    if (isServerRunning()) {
+    const isLive = isServerRunning() && this.settings.autoRegenerate;
+    
+    if (isLive) {
       this.stoppingInProgress = true;
-      this.updateServerStatusIcon();
+      this.settings.autoRegenerate = false;
+      await this.saveSettings();
       await stopServer();
       this.stoppingInProgress = false;
-      this.updateServerStatusIcon();
-      new Notice("Server stopped");
+      this.updateLiveModeIcon();
+      new Notice("Live mode stopped");
     } else {
       const fileExporter = new FileExporter(this);
       
@@ -160,8 +131,10 @@ export default class ArrowheadPlugin extends Plugin {
 
       const outputPath = await fileExporter.getAbsoluteOutputPath();
       await startServer(outputPath, this.settings.previewServerPort);
-      this.updateServerStatusIcon();
-      new Notice(`Server started at ${getServerUrl()}`);
+      this.settings.autoRegenerate = true;
+      await this.saveSettings();
+      this.updateLiveModeIcon();
+      new Notice(`Live mode started at ${getServerUrl()}`);
     }
   }
 
@@ -217,9 +190,7 @@ export default class ArrowheadPlugin extends Plugin {
       await this.siteGenerator.generate(siteData, relativeOutputPath);
       console.log("[generateSite] After siteGenerator.generate");
 
-      if (isAutoRegenerate) {
-        new Notice("Freshly baked! 🍞");
-      } else {
+      if (!isAutoRegenerate) {
         new Notice(`Static site is synced on ${outputPath}`);
       }
     } catch (error) {
