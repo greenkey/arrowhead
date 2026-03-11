@@ -182,7 +182,7 @@ export default class ArrowheadPlugin extends Plugin {
 
   private registerVaultEvents(): void {
     this.registerEvent(this.app.vault.on("modify", async (file) => {
-      if (this.settings.autoRegenerate && file.name.endsWith(".md")) {
+      if (this.settings.autoRegenerate && isServerRunning() && file.name.endsWith(".md")) {
         console.log(`File modified: ${file.path}, auto-regenerating...`);
         
         if (this.debounceTimer) {
