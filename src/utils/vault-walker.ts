@@ -7,6 +7,7 @@ export interface VaultData {
   links: SiteLink[];
   attachments: VaultFile[];
   totalSize: number;
+  excludedFiles: string[];
 }
 
 export interface VaultFile {
@@ -21,6 +22,7 @@ export interface VaultFile {
   created: number;
   modified: number;
   size: number;
+  pageType?: 'post' | 'page';
 }
 
 export interface VaultFolder {
@@ -43,6 +45,30 @@ export interface SiteLink {
   type: "internal" | "external" | "broken";
 }
 
+export function classifyFile(path: string, postsFolder: string, pagesFolder: string): 'post' | 'page' | null {
+  const normalizedPath = path.replace(/\\/g, '/');
+  const pathParts = normalizedPath.split('/');
+  
+  if (pathParts[0] === postsFolder) {
+    return 'post';
+  }
+  
+  if (pathParts[0] === pagesFolder) {
+    return 'page';
+  }
+  
+  for (let i = 1; i < pathParts.length - 1; i++) {
+    if (pathParts[i] === postsFolder) {
+      return 'post';
+    }
+    if (pathParts[i] === pagesFolder) {
+      return 'page';
+    }
+  }
+  
+  return null;
+}
+
 export class VaultWalker {
   private plugin: ArrowheadPlugin;
 
@@ -56,9 +82,12 @@ export class VaultWalker {
     const tags = new Map<string, VaultFile[]>();
     const attachments: VaultFile[] = [];
     const links: SiteLink[] = [];
+    const excludedFiles: string[] = [];
     
     const vault = this.plugin.app.vault;
     const ignoredFolders = new Set(this.plugin.settings.ignoredFolders);
+    const postsFolder = this.plugin.settings.postsFolder || "posts";
+    const pagesFolder = this.plugin.settings.pagesFolder || "pages";
 
     const allFiles = vault.getMarkdownFiles();
     
@@ -70,6 +99,16 @@ export class VaultWalker {
       }
 
       const fileData = await this.processMarkdownFile(file);
+      
+      const pageType = classifyFile(file.path, postsFolder, pagesFolder);
+      
+      if (pageType === null) {
+        console.warn(`[VaultWalker] Excluding file not in posts/pages folder: ${file.path}`);
+        excludedFiles.push(file.path);
+        continue;
+      }
+      
+      fileData.pageType = pageType;
       files.push(fileData);
 
       for (const tag of fileData.tags) {
@@ -119,7 +158,8 @@ export class VaultWalker {
       tags,
       links,
       attachments,
-      totalSize: files.reduce((sum, f) => sum + f.size, 0) + attachments.reduce((sum, f) => sum + f.size, 0)
+      totalSize: files.reduce((sum, f) => sum + f.size, 0) + attachments.reduce((sum, f) => sum + f.size, 0),
+      excludedFiles
     };
   }
 
