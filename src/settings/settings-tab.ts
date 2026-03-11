@@ -207,11 +207,6 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Live Reload")
-      .setDesc("Automatically refresh preview when site is regenerated")
-      .addToggle(toggle => this.createToggleSetting(toggle, "previewLiveReload"));
-
-    new Setting(containerEl)
       .setName("Auto-regenerate on change")
       .setDesc("Automatically regenerate site when vault files change")
       .addToggle(toggle => this.createToggleSetting(toggle, "autoRegenerate"));

@@ -14,7 +14,6 @@ export interface ArrowheadSettings {
   customJsPath: string;
   ignoredFolders: string[];
   previewServerPort: number;
-  previewLiveReload: boolean;
   autoRegenerate: boolean;
 }
 
@@ -58,6 +57,5 @@ export const DEFAULT_SETTINGS: ArrowheadSettings = {
   customJsPath: "",
   ignoredFolders: [],
   previewServerPort: 3456,
-  previewLiveReload: true,
   autoRegenerate: true
 };
