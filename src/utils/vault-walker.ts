@@ -10,12 +10,17 @@ export interface VaultData {
   excludedFiles: string[];
 }
 
+export interface MattermostMetadata {
+  date?: string;
+}
+
 export interface VaultFile {
   path: string;
   name: string;
   extension: string;
   content: string;
   frontmatter: Record<string, unknown>;
+  mattermost?: MattermostMetadata;
   tags: string[];
   links: OutgoingLink[];
   embeds: string[];
@@ -182,12 +187,25 @@ export class VaultWalker {
       extension: file.extension,
       content: content,
       frontmatter: frontmatter,
+      mattermost: this.extractMattermostMetadata(frontmatter, stat.ctime),
       tags: tags,
       links: links,
       embeds: this.extractEmbeds(content),
       created: stat.ctime,
       modified: stat.mtime,
       size: stat.size
+    };
+  }
+
+  private extractMattermostMetadata(frontmatter: Record<string, unknown>, created: number): MattermostMetadata | undefined {
+    const dateField = frontmatter.date;
+
+    if (!dateField) {
+      return undefined;
+    }
+
+    return {
+      date: String(dateField)
     };
   }
 

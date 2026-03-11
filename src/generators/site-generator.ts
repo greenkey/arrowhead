@@ -52,15 +52,29 @@ export class SiteGenerator {
     console.log(`Site generation completed in ${elapsed}ms`);
   }
 
+  private removeFrontmatter(content: string): string {
+    const frontmatterRegex = /^---\n[\s\S]*?\n---\s*\n?/;
+    const result = content.replace(frontmatterRegex, "");
+    console.log("[DEBUG] Frontmatter stripped:", result !== content);
+    return result;
+  }
+
   private async generatePage(fileData: VaultFile, vaultData: VaultData, outputPath: string): Promise<void> {
-    const pageContent = this.processMarkdown(fileData.content);
-    const processedLinks = this.processLinks(fileData, vaultData);
-    const processedEmbeds = this.processEmbeds(fileData, vaultData);
+    console.log("[DEBUG] generatePage for:", fileData.path);
+    const contentWithoutFrontmatter = this.removeFrontmatter(fileData.content);
+    const pageContent = this.processMarkdown(contentWithoutFrontmatter);
+    const processedLinks = this.processLinks(contentWithoutFrontmatter, fileData, vaultData);
+    const processedEmbeds = this.processEmbeds(contentWithoutFrontmatter, fileData, vaultData);
+
+    const dateStr = fileData.mattermost?.date 
+      ? fileData.mattermost.date 
+      : new Date(fileData.created).toISOString();
 
     const html = await this.wrapInTemplate({
       title: this.getTitle(fileData),
       content: processedEmbeds,
       frontmatter: fileData.frontmatter,
+      date: dateStr,
       tags: fileData.tags,
       lastModified: new Date(fileData.modified).toISOString()
     }, vaultData);
@@ -133,7 +147,7 @@ export class SiteGenerator {
     return processed;
   }
 
-  private processLinks(file: VaultFile, vaultData: VaultData): string {
+  private processLinks(content: string, file: VaultFile, vaultData: VaultData): string {
     const linkMap = new Map<string, string>();
     
     for (const link of file.links) {
@@ -147,30 +161,30 @@ export class SiteGenerator {
       }
     }
     
-    let content = file.content;
+    let processedContent = content;
     for (const [original, replacement] of linkMap) {
-      content = content.replace(original, replacement);
+      processedContent = processedContent.replace(original, replacement);
     }
     
-    return content;
+    return processedContent;
   }
 
-  private processEmbeds(file: VaultFile, vaultData: VaultData): string {
-    let content = this.processMarkdown(file.content);
+  private processEmbeds(content: string, file: VaultFile, vaultData: VaultData): string {
+    let processed = this.processMarkdown(content);
     
     for (const embed of file.embeds) {
       if (embed.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
         const assetPath = this.embedToAssetPath(embed);
         const imgTag = `<img src="${assetPath}" alt="${embed}" loading="lazy">`;
-        content = content.replace(`![[${embed}]]`, imgTag);
+        processed = processed.replace(`![[${embed}]]`, imgTag);
       } else if (embed.match(/\.md$/i)) {
         const link = this.embedToPageLink(embed);
         const embedTag = `<div class="embed" data-src="${link}"></div>`;
-        content = content.replace(`![[${embed}]]`, embedTag);
+        processed = processed.replace(`![[${embed}]]`, embedTag);
       }
     }
     
-    return content;
+    return processed;
   }
 
   private embedToAssetPath(embed: string): string {
@@ -181,7 +195,7 @@ export class SiteGenerator {
     return this.wikiLinkToUrl(embed.replace(/\.md$/i, ""));
   }
 
-  private async wrapInTemplate(pageData: { title: string; content: string; frontmatter: Record<string, unknown>; tags: string[]; lastModified: string }, vaultData?: VaultData): Promise<string> {
+  private async wrapInTemplate(pageData: { title: string; content: string; frontmatter: Record<string, unknown>; date?: string; tags: string[]; lastModified: string }, vaultData?: VaultData): Promise<string> {
     const siteTitle = this.plugin.settings.siteTitle;
     const siteDescription = this.plugin.settings.siteDescription;
 
@@ -200,6 +214,7 @@ export class SiteGenerator {
       title: pageData.title,
       content: pageData.content,
       description: pageData.frontmatter.description as string || siteDescription,
+      date: pageData.date,
       tags: pageData.tags,
       lastModified: pageData.lastModified,
       siteTitle,
@@ -287,14 +302,22 @@ private pathToUrl(path: string): string {
     
     const posts = vaultData.files
       .filter(file => file.pageType === 'post')
-      .sort((a, b) => b.modified - a.modified)
+      .sort((a, b) => {
+        const dateA = a.mattermost?.date ? new Date(a.mattermost.date).getTime() : a.created;
+        const dateB = b.mattermost?.date ? new Date(b.mattermost.date).getTime() : b.created;
+        return dateB - dateA;
+      })
       .slice(0, Math.min(10, vaultData.files.filter(f => f.pageType === 'post').length))
       .map(file => {
         const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
         const title = this.getTitle(file);
-        const date = new Date(file.modified).toISOString().split("T")[0] || "";
+        const dateStr = file.mattermost?.date 
+          ? file.mattermost.date 
+          : new Date(file.created).toISOString();
+        const date = dateStr.split("T")[0] || "";
         const tags = file.tags || [];
-        const excerpt = file.content.substring(0, 150).replace(/[#*`\[\]]/g, "").trim();
+        const contentWithoutFrontmatter = this.removeFrontmatter(file.content);
+        const excerpt = contentWithoutFrontmatter.substring(0, 150).replace(/[#*`\[\]]/g, "").trim();
         
         return { title, url, date, tags, excerpt };
       });
@@ -409,9 +432,12 @@ private pathToUrl(path: string): string {
     const baseUrl = this.plugin.settings.siteUrl;
     const pages = vaultData.files.map(file => {
       const path = this.getOutputPath(this.pathToUrl(file.path));
+      const dateStr = file.mattermost?.date 
+        ? file.mattermost.date 
+        : new Date(file.modified).toISOString();
       return `  <url>
     <loc>${baseUrl}/${path}</loc>
-    <lastmod>${new Date(file.modified).toISOString().split("T")[0]}</lastmod>
+    <lastmod>${dateStr.split("T")[0]}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;

@@ -30,11 +30,16 @@ export interface SiteConfig {
   favicon?: string;
 }
 
+export interface MattermostMetadata {
+  date?: string;
+}
+
 export interface PageData {
   path: string;
   title: string;
   content: string;
   frontmatter: Record<string, unknown>;
+  mattermost?: MattermostMetadata;
   tags: string[];
   categories: string[];
   date?: string;
