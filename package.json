@@ -11,7 +11,9 @@
     "deploy": "node scripts/deploy.mjs",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:ui": "vitest --ui"
   },
   "keywords": [
     "obsidian",
@@ -26,10 +28,12 @@
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/ui": "^4.0.18",
     "esbuild": "^0.20.0",
     "eslint": "^8.56.0",
     "eslint-plugin-obsidianmd": "^0.1.9",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "obsidian": "^1.5.0"
