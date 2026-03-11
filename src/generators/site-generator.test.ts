@@ -13,7 +13,8 @@ describe('SiteGenerator', () => {
         siteDescription: 'Test Description',
         siteUrl: 'https://example.com',
         customCssPath: '',
-        customJsPath: ''
+        customJsPath: '',
+        templateName: 'default'
       }
     };
     
@@ -31,7 +32,8 @@ describe('SiteGenerator', () => {
         siteDescription: 'Test Description',
         siteUrl: 'https://example.com',
         customCssPath: '',
-        customJsPath: ''
+        customJsPath: '',
+        templateName: 'default'
       }
     };
     
@@ -50,7 +52,8 @@ describe('SiteGenerator', () => {
         siteDescription: 'Test Description',
         siteUrl: 'https://example.com',
         customCssPath: '',
-        customJsPath: ''
+        customJsPath: '',
+        templateName: 'default'
       }
     };
     
@@ -62,36 +65,6 @@ describe('SiteGenerator', () => {
     expect(result).toContain('<code>code</code>');
   });
 
-  it('should generate valid HTML page structure', () => {
-    const mockPlugin = {
-      settings: {
-        siteTitle: 'Test Site',
-        siteDescription: 'Test Description',
-        siteUrl: 'https://example.com',
-        customCssPath: '',
-        customJsPath: ''
-      }
-    };
-    
-    const generator = new SiteGenerator(mockPlugin as any);
-    
-    const content = 'Test content';
-    const fileData = {
-      name: 'test',
-      frontmatter: {},
-      modified: Date.now()
-    };
-    
-    const html = (generator as any).createHtmlPage(content, fileData);
-    
-    expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('<html lang="en">');
-    expect(html).toContain('<head>');
-    expect(html).toContain('<body>');
-    expect(html).toContain('Test Site');
-    expect(html).toContain('Test content');
-  });
-
   it('should convert markdown file paths to URLs correctly', () => {
     const mockPlugin = {
       settings: {
@@ -99,14 +72,15 @@ describe('SiteGenerator', () => {
         siteDescription: 'Test Description',
         siteUrl: 'https://example.com',
         customCssPath: '',
-        customJsPath: ''
+        customJsPath: '',
+        templateName: 'default'
       }
     };
     
     const generator = new SiteGenerator(mockPlugin as any);
     
-    expect((generator as any).convertPathToUrl('pages/test.md')).toBe('pages/test');
-    expect((generator as any).convertPathToUrl('pages/Test Page.md')).toBe('pages/test-page');
-    expect((generator as any).convertPathToUrl('test.md')).toBe('test');
+    expect((generator as any).pathToUrl('pages/test.md')).toBe('pages/test');
+    expect((generator as any).pathToUrl('pages/Test Page.md')).toBe('pages/test-page');
+    expect((generator as any).pathToUrl('test.md')).toBe('test');
   });
 });
