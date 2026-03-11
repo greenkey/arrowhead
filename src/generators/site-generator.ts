@@ -353,7 +353,6 @@ private pathToUrl(path: string): string {
       <a href="/" class="site-title">{{siteTitle}}</a>
       <ul class="nav-links">
         <li><a href="/">Home</a></li>
-        <li><a href="/sitemap">Sitemap</a></li>
       </ul>
     </nav>
   </header>
