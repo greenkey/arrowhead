@@ -7,7 +7,6 @@ export interface ArrowheadSettings {
   siteDescription: string;
   siteUrl: string;
   includeAttachments: boolean;
-  generateIndex: boolean;
   generateSitemap: boolean;
   generateRobotsTxt: boolean;
   processWikilinks: boolean;
@@ -17,6 +16,8 @@ export interface ArrowheadSettings {
   ignoredFolders: string[];
   previewServerPort: number;
   autoRegenerate: boolean;
+  postsFolder: string;
+  pagesFolder: string;
 }
 
 export function isAbsolutePath(path: string): boolean {
@@ -50,7 +51,6 @@ export const DEFAULT_SETTINGS: ArrowheadSettings = {
   siteDescription: "A static website generated from my Obsidian vault",
   siteUrl: "https://example.com",
   includeAttachments: true,
-  generateIndex: true,
   generateSitemap: true,
   generateRobotsTxt: true,
   processWikilinks: true,
@@ -59,5 +59,7 @@ export const DEFAULT_SETTINGS: ArrowheadSettings = {
   customJsPath: "",
   ignoredFolders: [],
   previewServerPort: 3456,
-  autoRegenerate: true
+  autoRegenerate: true,
+  postsFolder: "posts",
+  pagesFolder: "pages"
 };

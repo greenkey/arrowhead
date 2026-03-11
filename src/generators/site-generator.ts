@@ -34,9 +34,7 @@ export class SiteGenerator {
     // Generate main index.html
     await this.generateIndexPage(vaultData, outputPath);
     
-    if (this.plugin.settings.generateIndex) {
-      await this.generateIndex(vaultData, outputPath);
-    }
+
     
     if (this.plugin.settings.generateSitemap) {
       await this.generateSitemap(vaultData, outputPath);
@@ -277,23 +275,28 @@ private pathToUrl(path: string): string {
     console.log("Generating main index.html page");
     console.log(`[generateIndexPage] Number of files: ${vaultData.files.length}`);
     
-    const sortedFiles = [...vaultData.files].sort((a, b) => b.modified - a.modified);
+    const posts = vaultData.files
+      .filter(file => file.pageType === 'post')
+      .sort((a, b) => b.modified - a.modified)
+      .slice(0, Math.min(10, vaultData.files.filter(f => f.pageType === 'post').length))
+      .map(file => {
+        const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
+        const title = this.getTitle(file);
+        const date = new Date(file.modified).toISOString().split("T")[0] || "";
+        const tags = file.tags || [];
+        const excerpt = file.content.substring(0, 150).replace(/[#*`\[\]]/g, "").trim();
+        
+        return { title, url, date, tags, excerpt };
+      });
     
-    const posts = sortedFiles.slice(0, Math.min(10, sortedFiles.length)).map(file => {
-      const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
-      const title = this.getTitle(file);
-      const date = new Date(file.modified).toISOString().split("T")[0] || "";
-      const tags = file.tags || [];
-      const excerpt = file.content.substring(0, 150).replace(/[#*`\[\]]/g, "").trim();
-      
-      return { title, url, date, tags, excerpt };
-    });
-    
-    const allPages = sortedFiles.map(file => {
-      const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
-      const title = this.getTitle(file);
-      return { title, url };
-    });
+    const pages = vaultData.files
+      .filter(file => file.pageType === 'page')
+      .sort((a, b) => this.getTitle(a).localeCompare(this.getTitle(b)))
+      .map(file => {
+        const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
+        const title = this.getTitle(file);
+        return { title, url };
+      });
     
     let template = await this.loadIndexTemplate(this.templateName);
     
@@ -304,7 +307,7 @@ private pathToUrl(path: string): string {
       siteTitle: this.plugin.settings.siteTitle,
       siteDescription: this.plugin.settings.siteDescription,
       posts,
-      allPages,
+      pages,
       isIndex: true
     };
     
@@ -313,7 +316,7 @@ private pathToUrl(path: string): string {
     const indexPath = `${outputPath}/index.html`;
     await this.ensureDirectory(outputPath, "index.html");
     await this.writeFile(indexPath, html);
-    console.log("Generated index.html with recent posts");
+    console.log(`Generated index.html with ${posts.length} posts and ${pages.length} pages`);
   }
 
   private async loadIndexTemplate(templateName: string): Promise<string> {
@@ -380,14 +383,16 @@ private pathToUrl(path: string): string {
     </section>
     {{/if}}
     
-    {{#if allPages}}
-    <section class="all-pages">
-      <h2>All Pages</h2>
-      <ul class="page-list">
-        {{#each allPages}}
-        <li><a href="{{url}}">{{title}}</a></li>
-        {{/each}}
-      </ul>
+    {{#if pages}}
+    <section class="site-pages">
+      <h2>Site Pages</h2>
+      <nav class="page-nav">
+        <ul class="page-list">
+          {{#each pages}}
+          <li><a href="{{url}}">{{title}}</a></li>
+          {{/each}}
+        </ul>
+      </nav>
     </section>
     {{/if}}
   </main>

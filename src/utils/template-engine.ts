@@ -20,6 +20,7 @@ export interface TemplateData {
   siteTitle?: string;
   siteDescription?: string;
   posts?: Post[];
+  pages?: { title: string; url: string; length?: number }[];
   allPages?: { title: string; url: string; length?: number }[];
   [key: string]: unknown;
 }
@@ -91,7 +92,6 @@ export class TemplateEngine {
     <a href="/" class="site-title">{{siteTitle}}</a>
     <ul class="nav-links">
       <li><a href="/">Home</a></li>
-      <li><a href="/sitemap">Sitemap</a></li>
     </ul>
   </nav>
 </header>`,
@@ -228,7 +228,6 @@ export class TemplateEngine {
       <a href="/" class="site-title">{{siteTitle}}</a>
       <ul class="nav-links">
         <li><a href="/">Home</a></li>
-        <li><a href="/sitemap">Sitemap</a></li>
       </ul>
     </nav>
   </header>
@@ -287,7 +286,6 @@ export class TemplateEngine {
       <h2>{{siteTitle}}</h2>
       <nav>
         <a href="/">Home</a>
-        <a href="/sitemap">All Pages</a>
       </nav>
     </aside>
     

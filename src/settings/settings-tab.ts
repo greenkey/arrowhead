@@ -24,6 +24,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
     this.createOutputSettings(containerEl);
     this.createTemplateSettings(containerEl);
     this.createGenerationSettings(containerEl);
+    this.createContentSettings(containerEl);
     this.createPreviewSettings(containerEl);
     this.createAdvancedSettings(containerEl);
   }
@@ -159,11 +160,6 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       .addToggle(toggle => this.createToggleSetting(toggle, "includeAttachments"));
 
     new Setting(containerEl)
-      .setName("Generate Index")
-      .setDesc("Create a site index page with all notes")
-      .addToggle(toggle => this.createToggleSetting(toggle, "generateIndex"));
-
-    new Setting(containerEl)
       .setName("Generate Sitemap")
       .setDesc("Create sitemap.xml for search engines")
       .addToggle(toggle => this.createToggleSetting(toggle, "generateSitemap"));
@@ -182,6 +178,40 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       .setName("Process Embeds")
       .setDesc("Handle [[Image]] and other embeds")
       .addToggle(toggle => this.createToggleSetting(toggle, "processEmbeds"));
+
+    this.createContentSettings(containerEl);
+  }
+
+  private createContentSettings(containerEl: HTMLElement): void {
+    containerEl.createEl("h2", { text: "Content Organization" });
+    containerEl.createEl("p", { 
+      text: "Configure which folders contain posts and pages", 
+      cls: "setting-description" 
+    });
+
+    new Setting(containerEl)
+      .setName("Posts Folder")
+      .setDesc("Folder containing blog posts/timeline entries (default: posts)")
+      .addText(text => {
+        text.setPlaceholder("posts");
+        text.setValue(this.plugin.settings.postsFolder);
+        text.onChange(async (value) => {
+          this.plugin.settings.postsFolder = value.trim() || "posts";
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Pages Folder")
+      .setDesc("Folder containing static pages like About, Contact (default: pages)")
+      .addText(text => {
+        text.setPlaceholder("pages");
+        text.setValue(this.plugin.settings.pagesFolder);
+        text.onChange(async (value) => {
+          this.plugin.settings.pagesFolder = value.trim() || "pages";
+          await this.plugin.saveSettings();
+        });
+      });
   }
 
   private createPreviewSettings(containerEl: HTMLElement): void {

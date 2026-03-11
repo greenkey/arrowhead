@@ -15,7 +15,6 @@ describe('SiteGenerator - Failing Test for Attachment Bug', () => {
         siteDescription: 'Test Description',
         siteUrl: 'https://example.com',
         includeAttachments: true,
-        generateIndex: true,
         generateSitemap: true,
         generateRobotsTxt: true,
         processWikilinks: true,

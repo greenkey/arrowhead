@@ -3,7 +3,6 @@ export interface ExportOptions {
   template: string;
   prettyUrls: boolean;
   includeAssets: boolean;
-  generateIndex: boolean;
   sitemap: boolean;
   robots: boolean;
   wikilinks: boolean;
@@ -12,7 +11,9 @@ export interface ExportOptions {
 
 export interface GenerationResult {
   success: boolean;
+  postsGenerated: number;
   pagesGenerated: number;
+  excludedFiles: string[];
   assetsCopied: number;
   errors: string[];
   warnings: string[];
@@ -39,4 +40,5 @@ export interface PageData {
   date?: string;
   lastModified: string;
   url: string;
+  pageType?: 'post' | 'page';
 }
