@@ -92,6 +92,7 @@ export class VaultWalker {
 
     const attachmentFiles = vault.getFiles().filter(f => 
       !f.name.endsWith(".md") && 
+      !f.name.endsWith(".html") && 
       !ignoredFolders.has(f.parent?.path || "")
     );
     

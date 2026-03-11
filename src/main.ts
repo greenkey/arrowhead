@@ -9,7 +9,7 @@ import { startServer, stopServer, getServerUrl, isServerRunning } from "./utils/
 export default class ArrowheadPlugin extends Plugin {
   settings: typeof DEFAULT_SETTINGS;
   private siteGenerator: SiteGenerator;
-  private fileExporter: FileExporter;
+  public fileExporter: FileExporter;
   private vaultWalker: VaultWalker;
   private generationInProgress: boolean = false;
   private ribbonIcon: HTMLElement | null = null;
@@ -125,7 +125,7 @@ export default class ArrowheadPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  async generateSite(): Promise<void> {
+  async generateSite(isAutoRegenerate: boolean = false): Promise<void> {
     if (this.generationInProgress) {
       new Notice("Site generation already in progress");
       return;
@@ -143,7 +143,9 @@ export default class ArrowheadPlugin extends Plugin {
     }
 
     this.generationInProgress = true;
-    new Notice("Generating static site...");
+    if (!isAutoRegenerate) {
+      new Notice("Generating static site...");
+    }
 
     try {
       const outputPath = await this.fileExporter.getAbsoluteOutputPath();
@@ -156,8 +158,13 @@ export default class ArrowheadPlugin extends Plugin {
       console.log(`[generateSite] Collected ${siteData.files.length} files from vault`);
 
       await this.siteGenerator.generate(siteData, relativeOutputPath);
+      console.log("[generateSite] After siteGenerator.generate");
 
-      new Notice(`Static site generated successfully!\nLocation: ${outputPath}`);
+      if (isAutoRegenerate) {
+        new Notice("Freshly baked! 🍞");
+      } else {
+        new Notice(`Static site generated successfully!\nLocation: ${outputPath}`);
+      }
     } catch (error) {
       console.error("Site generation failed:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -183,8 +190,7 @@ export default class ArrowheadPlugin extends Plugin {
         }
         
         this.debounceTimer = setTimeout(async () => {
-          await this.generateSite();
-          new Notice("Site auto-regenerated");
+          await this.generateSite(true);
         }, 1000);
       }
     }));
