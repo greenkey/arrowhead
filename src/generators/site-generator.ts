@@ -23,6 +23,8 @@ export class SiteGenerator {
 
     await this.ensureBaseDirectory(outputPath);
 
+    await this.copyTemplateAssets(outputPath);
+
     const startTime = Date.now();
     
     for (const file of vaultData.files) {
@@ -302,7 +304,8 @@ private pathToUrl(path: string): string {
       siteTitle: this.plugin.settings.siteTitle,
       siteDescription: this.plugin.settings.siteDescription,
       posts,
-      allPages
+      allPages,
+      isIndex: true
     };
     
     const html = await this.templateEngine.render(template, templateData);
@@ -552,6 +555,24 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     } catch (error) {
       console.error(`[writeFile] Failed: ${normalizedPath}`, error);
       throw error;
+    }
+  }
+
+  private async copyTemplateAssets(outputPath: string): Promise<void> {
+    const cssFileName = "styles.css";
+    const assetsPath = `${outputPath}/assets`;
+
+    try {
+      if (!fs.existsSync(assetsPath)) {
+        fs.mkdirSync(assetsPath, { recursive: true });
+      }
+
+      const cssContent = this.templateEngine.getDefaultCss();
+      const targetPath = `${assetsPath}/${cssFileName}`;
+      fs.writeFileSync(targetPath, cssContent, "utf-8");
+      console.log(`[copyTemplateAssets] Copied CSS to ${targetPath}`);
+    } catch (error) {
+      console.warn(`[copyTemplateAssets] Failed to copy template CSS:`, error);
     }
   }
 }

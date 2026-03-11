@@ -8,7 +8,7 @@
   {{/if}}
   <meta name="generator" content="Arrowhead Static Site Generator">
   <title>{{title}} | {{siteTitle}}</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/assets/styles.css">
   {{#if customCss}}
   <link rel="stylesheet" href="{{customCss}}">
   {{/if}}
@@ -16,7 +16,46 @@
 <body>
   {{> header}}
   
+  {{#if isIndex}}
+  <section class="hero">
+    <div class="hero-content">
+      <h1>{{siteTitle}}</h1>
+      {{#if siteDescription}}
+      <p class="hero-description">{{siteDescription}}</p>
+      {{/if}}
+    </div>
+  </section>
+  {{/if}}
+  
   <main class="site-content">
+    {{#if isIndex}}
+    {{#if posts}}
+    <section class="posts-section">
+      <h2>Recent Posts</h2>
+      <div class="posts-grid">
+        {{#each posts}}
+        <article class="post-card">
+          <a href="{{url}}" class="post-card-link">
+            <h3 class="post-card-title">{{title}}</h3>
+            <time class="post-card-date" datetime="{{date}}">{{date}}</time>
+            {{#if tags}}
+            <div class="post-card-tags">
+              {{#each tags}}
+              <span class="tag">{{this}}</span>
+              {{/each}}
+            </div>
+            {{/if}}
+            {{#if excerpt}}
+            <p class="post-card-excerpt">{{excerpt}}</p>
+            {{/if}}
+          </a>
+        </article>
+        {{/each}}
+      </div>
+    </section>
+    {{/if}}
+    {{/if}}
+    
     {{> breadcrumb}}
     
     <article class="markdown-body">
