@@ -1,3 +1,5 @@
+import * as os from "os";
+
 export interface ArrowheadSettings {
   outputDirectory: string;
   templateName: string;
@@ -42,7 +44,7 @@ export function validateOutputPath(path: string, vaultPath: string): { valid: bo
 }
 
 export const DEFAULT_SETTINGS: ArrowheadSettings = {
-  outputDirectory: "public",
+  outputDirectory: `${os.tmpdir()}/arrowhead-output`,
   templateName: "default",
   siteTitle: "My Obsidian Site",
   siteDescription: "A static website generated from my Obsidian vault",

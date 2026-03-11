@@ -66,10 +66,10 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Output Directory")
-      .setDesc("Directory where generated files will be placed (absolute or relative to vault root)")
+      .setDesc("Directory where generated files will be placed (absolute path or relative to vault root)")
       .addText(text => {
         outputTextComponent = text;
-        text.setPlaceholder("public");
+        text.setPlaceholder("/tmp/arrowhead-output");
         text.setValue(this.plugin.settings.outputDirectory);
         text.onChange(async (value) => {
           this.plugin.settings.outputDirectory = value.trim();

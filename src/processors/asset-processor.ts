@@ -1,6 +1,9 @@
 import ArrowheadPlugin from "../main";
 import { VaultData, VaultFile } from "../utils/vault-walker";
 import { PathResolver } from "../utils/path-resolver";
+import { isAbsolutePath } from "../settings/settings";
+import * as fs from "fs";
+import * as path from "path";
 
 export class AssetProcessor {
   private plugin: ArrowheadPlugin;
@@ -101,19 +104,31 @@ export class AssetProcessor {
   private async copyAsset(file: VaultFile, outputPath: string): Promise<void> {
     try {
       const adapter = this.plugin.app.vault.adapter;
+      const vaultRoot = this.plugin.getVaultRootPath();
+      const isOutsideVault = isAbsolutePath(outputPath) && !outputPath.startsWith(vaultRoot);
       const targetPath = `${outputPath}/assets/${file.path}`;
       
       const pathParts = targetPath.split("/");
       pathParts.pop();
       const targetDir = pathParts.join("/");
       
-      try {
-        await adapter.mkdir(targetDir);
-      } catch {
-      }
-      
-      if (await adapter.exists(file.path)) {
-        await adapter.copy(file.path, targetPath);
+      if (isOutsideVault) {
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        
+        if (fs.existsSync(file.path)) {
+          fs.copyFileSync(file.path, targetPath);
+        }
+      } else {
+        try {
+          await adapter.mkdir(targetDir);
+        } catch {
+        }
+        
+        if (await adapter.exists(file.path)) {
+          await adapter.copy(file.path, targetPath);
+        }
       }
     } catch (error) {
       console.warn(`Failed to copy asset: ${file.path}`, error);

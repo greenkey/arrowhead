@@ -1,5 +1,8 @@
 import ArrowheadPlugin from "../main";
 import { VaultData, VaultFile } from "../utils/vault-walker";
+import { isAbsolutePath } from "../settings/settings";
+import * as fs from "fs";
+import * as path from "path";
 
 export class SiteGenerator {
   private plugin: ArrowheadPlugin;
@@ -434,19 +437,38 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     console.log(`[ensureBaseDirectory] Ensuring directory: "${outputPath}"`);
     try {
       const adapter = this.plugin.app.vault.adapter;
+      const vaultRoot = this.plugin.getVaultRootPath();
+      const isOutsideVault = isAbsolutePath(outputPath) && !outputPath.startsWith(vaultRoot);
 
       console.log(`[ensureBaseDirectory] Checking if directory exists...`);
-      const exists = await adapter.exists(outputPath);
-      console.log(`[ensureBaseDirectory] Directory exists: ${exists}`);
+      
+      if (isOutsideVault) {
+        console.log(`[ensureBaseDirectory] Using Node.js fs for external directory`);
+        const exists = fs.existsSync(outputPath);
+        console.log(`[ensureBaseDirectory] Directory exists: ${exists}`);
 
-      if (!exists) {
-        console.log(`[ensureBaseDirectory] Creating directory...`);
-        await adapter.mkdir(outputPath);
+        if (!exists) {
+          console.log(`[ensureBaseDirectory] Creating directory with fs.mkdirSync...`);
+          fs.mkdirSync(outputPath, { recursive: true });
 
-        const verifyExists = await adapter.exists(outputPath);
-        console.log(`[ensureBaseDirectory] After mkdir, directory exists: ${verifyExists}`);
+          const verifyExists = fs.existsSync(outputPath);
+          console.log(`[ensureBaseDirectory] After mkdir, directory exists: ${verifyExists}`);
+        } else {
+          console.log(`[ensureBaseDirectory] Directory already exists`);
+        }
       } else {
-        console.log(`[ensureBaseDirectory] Directory already exists`);
+        const exists = await adapter.exists(outputPath);
+        console.log(`[ensureBaseDirectory] Directory exists: ${exists}`);
+
+        if (!exists) {
+          console.log(`[ensureBaseDirectory] Creating directory...`);
+          await adapter.mkdir(outputPath);
+
+          const verifyExists = await adapter.exists(outputPath);
+          console.log(`[ensureBaseDirectory] After mkdir, directory exists: ${verifyExists}`);
+        } else {
+          console.log(`[ensureBaseDirectory] Directory already exists`);
+        }
       }
     } catch (error) {
       console.error(`[ensureBaseDirectory] Failed: "${outputPath}"`, error);
@@ -466,25 +488,47 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     console.log(`[ensureDirectory] Creating directory: "${fullPath}"`);
 
     if (!fullPath.endsWith(".html") && !fullPath.endsWith(".xml") && !fullPath.endsWith(".txt") && !fullPath.endsWith(".css") && !fullPath.endsWith(".js")) {
+      const vaultRoot = this.plugin.getVaultRootPath();
+      const isOutsideVault = isAbsolutePath(basePath) && !basePath.startsWith(vaultRoot);
+      
       try {
-        await this.plugin.app.vault.adapter.mkdir(fullPath);
+        if (isOutsideVault) {
+          if (!fs.existsSync(fullPath)) {
+            fs.mkdirSync(fullPath, { recursive: true });
+          }
+        } else {
+          await this.plugin.app.vault.adapter.mkdir(fullPath);
+        }
       } catch (error) {
         console.warn(`[ensureDirectory] Failed to create directory: "${fullPath}"`, error);
       }
     }
   }
 
-  private async writeFile(path: string, content: string): Promise<void> {
-    const normalizedPath = path.replace(/\/+/g, "/");
+  private async writeFile(filePath: string, content: string): Promise<void> {
+    const normalizedPath = filePath.replace(/\/+/g, "/");
     console.log(`[writeFile] Writing: ${normalizedPath} (${content.length} bytes)`);
+    
+    const vaultRoot = this.plugin.getVaultRootPath();
+    const isOutsideVault = isAbsolutePath(normalizedPath) && !normalizedPath.startsWith(vaultRoot);
+    
     try {
-      await this.plugin.app.vault.adapter.write(normalizedPath, content);
+      if (isOutsideVault) {
+        fs.writeFileSync(normalizedPath, content, "utf-8");
+        const exists = fs.existsSync(normalizedPath);
+        console.log(`[writeFile] Success (fs). File exists: ${exists}`);
+        if (!exists) {
+          console.warn(`[writeFile] Write reported success but file doesn't exist`);
+        }
+      } else {
+        await this.plugin.app.vault.adapter.write(normalizedPath, content);
 
-      const exists = await this.plugin.app.vault.adapter.exists(normalizedPath);
-      console.log(`[writeFile] Success. File exists on adapter: ${exists}`);
+        const exists = await this.plugin.app.vault.adapter.exists(normalizedPath);
+        console.log(`[writeFile] Success (adapter). File exists on adapter: ${exists}`);
 
-      if (!exists) {
-        console.warn(`[writeFile] Write reported success but file doesn't exist in adapter`);
+        if (!exists) {
+          console.warn(`[writeFile] Write reported success but file doesn't exist in adapter`);
+        }
       }
     } catch (error) {
       console.error(`[writeFile] Failed: ${normalizedPath}`, error);
