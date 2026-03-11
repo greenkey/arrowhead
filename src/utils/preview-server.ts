@@ -83,6 +83,9 @@ function tryStartServer(outputDir: string, port: number): Promise<number> {
       });
     });
 
+    serverInstance.headersTimeout = 5000;
+    serverInstance.timeout = 5000;
+
     serverInstance.on("error", (error: NodeJS.ErrnoException) => {
       reject(error);
     });
@@ -97,11 +100,23 @@ function tryStartServer(outputDir: string, port: number): Promise<number> {
 export async function stopServer(): Promise<void> {
   return new Promise((resolve) => {
     if (server) {
+      const serverRef = server;
       server.close(() => {
         server = null;
         currentPort = 0;
         resolve();
       });
+
+      setTimeout(() => {
+        if (server === serverRef && serverRef) {
+          try {
+            (serverRef as any)._connections = 0;
+          } catch (e) {}
+          server = null;
+          currentPort = 0;
+          resolve();
+        }
+      }, 1000);
     } else {
       resolve();
     }
