@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings/settings";
 import { SiteGenerator } from "./generators/site-generator";
 import { FileExporter } from "./exporters/file-exporter";
 import { VaultWalker } from "./utils/vault-walker";
-import { startServer, stopServer, getServerUrl, isServerRunning } from "./utils/preview-server";
+import { startServer, stopServer, getServerUrl, isServerRunning, beforeFirstGeneration } from "./utils/preview-server";
 
 export default class ArrowheadPlugin extends Plugin {
   settings: typeof DEFAULT_SETTINGS;
@@ -134,6 +134,7 @@ export default class ArrowheadPlugin extends Plugin {
       this.settings.autoRegenerate = true;
       await this.saveSettings();
       this.updateLiveModeIcon();
+      await this.generateSite();
       new Notice(`Live mode started at ${getServerUrl()}`);
     }
   }
@@ -170,6 +171,10 @@ export default class ArrowheadPlugin extends Plugin {
     if (!validation.valid) {
       new Notice(`Invalid output path: ${validation.error}`);
       return;
+    }
+
+    if (beforeFirstGeneration()) {
+      await this.fileExporter.clearOutputDirectory();
     }
 
     this.generationInProgress = true;

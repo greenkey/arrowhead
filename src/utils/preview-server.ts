@@ -5,12 +5,14 @@ import * as path from "path";
 let server: http.Server | null = null;
 let currentPort: number = 0;
 let currentOutputDir: string = "";
+let hasGeneratedSinceServerStart: boolean = false;
 
 export async function startServer(outputDir: string, preferredPort: number = 3456): Promise<number> {
   if (server) {
     await stopServer();
   }
 
+  hasGeneratedSinceServerStart = false;
   currentOutputDir = outputDir;
   const maxAttempts = 10;
   let port = preferredPort;
@@ -136,4 +138,12 @@ export function getServerUrl(): string {
     return "";
   }
   return `http://localhost:${currentPort}`;
+}
+
+export function beforeFirstGeneration(): boolean {
+  if (!hasGeneratedSinceServerStart) {
+    hasGeneratedSinceServerStart = true;
+    return true;
+  }
+  return false;
 }

@@ -23,31 +23,29 @@ export class SiteGenerator {
 
     await this.ensureBaseDirectory(outputPath);
 
+    await this.clearOutputDirectory(outputPath);
     await this.copyTemplateAssets(outputPath);
 
     const startTime = Date.now();
-    
+
     for (const file of vaultData.files) {
       await this.generatePage(file, vaultData, outputPath);
     }
-    
-    // Generate main index.html
-    await this.generateIndexPage(vaultData, outputPath);
-    
 
-    
+    await this.generateIndexPage(vaultData, outputPath);
+
     if (this.plugin.settings.generateSitemap) {
       await this.generateSitemap(vaultData, outputPath);
     }
-    
+
     if (this.plugin.settings.generateRobotsTxt) {
       await this.generateRobotsTxt(outputPath);
     }
-    
+
     if (this.plugin.settings.includeAttachments) {
       await this.copyAttachments(vaultData.attachments, outputPath);
     }
-    
+
     const elapsed = Date.now() - startTime;
     console.log(`Site generation completed in ${elapsed}ms`);
   }
@@ -485,6 +483,60 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     }
     
     console.log(`Copied ${attachments.length} attachments`);
+  }
+
+  private async clearOutputDirectory(outputPath: string): Promise<void> {
+    const vaultRoot = this.plugin.getVaultRootPath();
+    const isOutsideVault = isAbsolutePath(outputPath) && !outputPath.startsWith(vaultRoot);
+
+    console.log(`[clearOutputDirectory] Clearing: ${outputPath}, outsideVault: ${isOutsideVault}`);
+
+    try {
+      if (isOutsideVault) {
+        if (fs.existsSync(outputPath)) {
+          const files = fs.readdirSync(outputPath);
+          for (const file of files) {
+            const filePath = path.join(outputPath, file);
+            if (fs.lstatSync(filePath).isDirectory()) {
+              fs.rmSync(filePath, { recursive: true, force: true });
+            } else {
+              fs.unlinkSync(filePath);
+            }
+          }
+          console.log("[clearOutputDirectory] Cleared with fs");
+        }
+      } else {
+        const adapter = this.plugin.app.vault.adapter;
+        const exists = await adapter.exists(outputPath);
+        if (exists) {
+          const entries = await adapter.list(outputPath);
+          for (const file of entries.files) {
+            await adapter.remove(file);
+          }
+          for (const folder of entries.folders) {
+            await this.removeDirectoryRecursive(folder);
+          }
+          console.log("[clearOutputDirectory] Cleared with adapter");
+        }
+      }
+    } catch (error) {
+      console.warn("[clearOutputDirectory] Failed:", error);
+    }
+  }
+
+  private async removeDirectoryRecursive(dirPath: string): Promise<void> {
+    const adapter = this.plugin.app.vault.adapter;
+    const entries = await adapter.list(dirPath);
+
+    for (const file of entries.files) {
+      await adapter.remove(file);
+    }
+
+    for (const folder of entries.folders) {
+      await this.removeDirectoryRecursive(folder);
+    }
+
+    await adapter.rmdir(dirPath, true);
   }
 
   private async ensureBaseDirectory(outputPath: string): Promise<void> {
