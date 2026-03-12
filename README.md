@@ -1,22 +1,29 @@
 # Arrowhead Static Site Generator
 
-Convert your Obsidian vault to a complete static HTML website.
-
-## What It Does
-
-1. Scans your vault for `pages/` and `posts/` folders
-2. Converts markdown to HTML with formatting preserved
-3. Processes wiki links and markdown links
-4. Copies images and assets to the output directory
-5. Generates a complete static site ready for publishing
+Convert your Obsidian vault to a complete static HTML website. The plugin scans your vault, processes markdown files with full formatting support, and generates a clean static site structure ready for deployment.
 
 ## Quick Start
 
 1. Create `pages/` and `posts/` folders in your vault root
 2. Add markdown files with frontmatter (title, date, optional tags)
-3. Open Settings → Arrowhead Static Site Generator
-4. Set your output directory
-5. Click the ribbon icon or run "Generate Static Site" command
+3. Configure output directory in Settings → Arrowhead Static Site Generator
+4. Click the ribbon icon or run "Generate Static Site" command
+
+Your vault structure:
+```
+your-vault/
+├── pages/              # Main site pages
+│   └── about.md
+├── posts/              # Blog posts/articles
+│   └── hello-world.md
+├── assets/             # Images and files (copied as-is)
+│   └── images/
+└── site-output/        # Generated static site
+    ├── pages/
+    ├── posts/
+    ├── assets/
+    └── index.html
+```
 
 ## Main Features
 
