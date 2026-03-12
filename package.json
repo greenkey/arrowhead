@@ -4,6 +4,11 @@
   "description": "Convert your Obsidian vault to a complete static website with customizable themes and export options.",
   "main": "main.js",
   "type": "module",
+  "files": [
+    "main.js",
+    "manifest.json",
+    "styles.css"
+  ],
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",

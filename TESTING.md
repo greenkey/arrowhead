@@ -13,6 +13,31 @@ The integration test suite validates the complete publishing pipeline, from vaul
 - **File Operations**: Create, read, rename, delete operations
 - **Vault Management**: Test infrastructure setup and cleanup
 
+## Test Data
+
+The `test-data/` directory contains sample vault data used by integration tests. This ensures consistent, reproducible testing across all contributors and environments.
+
+### Why Include Test Data?
+
+- **Consistency**: All contributors run tests against the same data
+- **Reproducibility**: Debugging test failures is easier with known inputs
+- **Onboarding**: New contributors can understand expected structure
+- **Version Control**: Test data changes are tracked alongside code changes
+
+### What Gets Published
+
+Only these files are included in the plugin distribution:
+- `main.js`
+- `manifest.json`
+- `styles.css`
+
+The following are **always excluded** from builds:
+- `test-data/` - Test fixtures and sample vault
+- `test-results/` - Test output artifacts
+- `src/test/` - Test utilities and mocks
+- `vitest*.config.ts` - Test configurations
+- All source files (TypeScript, config files)
+
 ## Running Tests
 
 ### Unit Tests
@@ -236,14 +261,21 @@ Integration test configuration with:
 | `lint` | Run ESLint |
 | `typecheck` | TypeScript checking |
 
-## Excluded Directories
+## Excluded from Builds
 
-The following directories are excluded from npm package:
+These are tracked in the repository but **never included** in plugin distributions:
 
-- `test-data/` - Test vault and fixtures
-- `test-results/` - Test output artifacts
-- `src/test/` - Test utilities and mocks
-- `vitest*.config.ts` - Test configurations
+| Directory | Purpose | Tracked? |
+|-----------|---------|----------|
+| `test-data/` | Sample test vault with real content | Yes |
+| `test-results/` | Test output (JSON reports) | No |
+| `src/test/` | Test helpers and mocks | Yes |
+| `vitest*.config.ts` | Vitest configurations | Yes |
+
+The `package.json` `files` field explicitly controls distribution:
+```json
+"files": ["main.js", "manifest.json", "styles.css"]
+```
 
 ## Best Practices
 
