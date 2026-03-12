@@ -1,137 +1,191 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { createMockPlugin, createMockVaultAdapter } from './test/mocks';
+import { SiteGenerator } from './generators/site-generator';
+import { VaultData } from './utils/vault-walker';
 import { isAbsolutePath } from './settings/settings';
+import { vi } from 'vitest';
 
-describe('Clear Output Directory Validation', () => {
-  describe('Integration: File clearing with pre-existing content', () => {
-    it('should clear files when generating site with pre-existing output', async () => {
+describe('SiteGenerator.clearOutputDirectory Tests', () => {
+  describe('Using actual SiteGenerator.clearOutputDirectory method', () => {
+    it('should clear files when called with absolute path outside vault', async () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrowhead-test-'));
       const vaultPath = path.join(tmpDir, 'vault');
       const outputPath = path.join(tmpDir, 'output');
 
-      fs.mkdirSync(path.join(vaultPath, 'pages'), { recursive: true });
+      fs.mkdirSync(vaultPath, { recursive: true });
       fs.mkdirSync(outputPath, { recursive: true });
 
-      fs.writeFileSync(path.join(vaultPath, 'pages', 'test.md'), `---
-title: Test Page
-date: 2026-03-10
----
-# Test Content`);
-
-      fs.writeFileSync(path.join(outputPath, 'old-file-1.html'), 'OLD CONTENT 1');
-      fs.writeFileSync(path.join(outputPath, 'old-file-2.html'), 'OLD CONTENT 2');
+      fs.writeFileSync(path.join(outputPath, 'old-file-1.html'), 'OLD 1');
+      fs.writeFileSync(path.join(outputPath, 'old-file-2.html'), 'OLD 2');
       fs.mkdirSync(path.join(outputPath, 'subdir'), { recursive: true });
-      fs.writeFileSync(path.join(outputPath, 'subdir', 'nested-old.html'), 'NESTED OLD');
+      fs.writeFileSync(path.join(outputPath, 'subdir', 'nested.html'), 'NESTED');
 
-      const outputFilesBefore = listFilesRecursively(outputPath);
-      expect(outputFilesBefore.length).toBe(3);
+      expect(fs.existsSync(path.join(outputPath, 'old-file-1.html'))).toBe(true);
+      expect(fs.existsSync(path.join(outputPath, 'subdir'))).toBe(true);
 
-      const clearedFiles = await simulateClearAndReturnRemovedFiles(
-        vaultPath,
-        outputPath,
-        ['old-file-1.html', 'old-file-2.html', 'subdir/nested-old.html']
-      );
+      const mockPlugin = createMockPluginWithPaths(vaultPath, outputPath);
+      const generator = new SiteGenerator(mockPlugin as any);
 
-      const outputFilesAfter = listFilesRecursively(outputPath);
+      await (generator as any).clearOutputDirectory(outputPath);
 
-      expect(clearedFiles.length).toBe(3);
-      expect(outputFilesAfter.length).toBe(0);
       expect(fs.existsSync(path.join(outputPath, 'old-file-1.html'))).toBe(false);
       expect(fs.existsSync(path.join(outputPath, 'old-file-2.html'))).toBe(false);
       expect(fs.existsSync(path.join(outputPath, 'subdir'))).toBe(false);
+      expect(fs.existsSync(outputPath)).toBe(true);
 
       fs.rmSync(tmpDir, { recursive: true });
     });
 
-    it('should fail to clear files when clearing function is empty', async () => {
+    it('should clear files inside vault-relative path', async () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrowhead-test-'));
+      const vaultPath = path.join(tmpDir, 'vault');
+      const outputPath = 'output';
+
+      fs.mkdirSync(vaultPath, { recursive: true });
+      fs.mkdirSync(path.join(vaultPath, outputPath), { recursive: true });
+
+      fs.writeFileSync(path.join(vaultPath, outputPath, 'file.html'), 'OLD');
+      fs.writeFileSync(path.join(vaultPath, outputPath, 'another.html'), 'ANOTHER');
+
+      expect(fs.existsSync(path.join(vaultPath, outputPath, 'file.html'))).toBe(true);
+
+      const mockPlugin = createMockPluginWithPaths(vaultPath, path.join(vaultPath, outputPath));
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      await (generator as any).clearOutputDirectory(outputPath);
+
+      expect(fs.existsSync(path.join(vaultPath, outputPath, 'file.html'))).toBe(false);
+      expect(fs.existsSync(path.join(vaultPath, outputPath, 'another.html'))).toBe(false);
+
+      fs.rmSync(tmpDir, { recursive: true });
+    });
+
+    it('should handle non-existent directory', async () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrowhead-test-'));
+      const vaultPath = path.join(tmpDir, 'vault');
+      const outputPath = path.join(tmpDir, 'non-existent');
+
+      fs.mkdirSync(vaultPath, { recursive: true });
+
+      const mockPlugin = createMockPluginWithPaths(vaultPath, outputPath);
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      await expect((generator as any).clearOutputDirectory(outputPath)).resolves.not.toThrow();
+
+      fs.rmSync(tmpDir, { recursive: true });
+    });
+
+    it('should handle empty directory', async () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrowhead-test-'));
+      const vaultPath = path.join(tmpDir, 'vault');
       const outputPath = path.join(tmpDir, 'output');
 
+      fs.mkdirSync(vaultPath, { recursive: true });
       fs.mkdirSync(outputPath, { recursive: true });
-      fs.writeFileSync(path.join(outputPath, 'file-to-clear.html'), 'should be removed');
 
-      const filesBefore = listFilesRecursively(outputPath);
-      expect(filesBefore.length).toBe(1);
+      const mockPlugin = createMockPluginWithPaths(vaultPath, outputPath);
+      const generator = new SiteGenerator(mockPlugin as any);
 
-      await emptyClearFunction(outputPath);
+      await expect((generator as any).clearOutputDirectory(outputPath)).resolves.not.toThrow();
 
-      const filesAfter = listFilesRecursively(outputPath);
-      expect(filesAfter.length).toBe(1);
-      expect(fs.existsSync(path.join(outputPath, 'file-to-clear.html'))).toBe(true);
+      expect(fs.existsSync(outputPath)).toBe(true);
 
       fs.rmSync(tmpDir, { recursive: true });
     });
+  });
 
-    it('should properly distinguish vault-internal vs external paths', async () => {
+  describe('Validation: Empty clearing function leaves files behind', () => {
+    it('should leave files when clearing function does nothing', async () => {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrowhead-test-'));
-      const vaultPath = path.join(tmpDir, 'my-vault');
-      const outputPath = path.join(vaultPath, '.obsidian-output');
+      const vaultPath = path.join(tmpDir, 'vault');
+      const outputPath = path.join(tmpDir, 'output');
 
+      fs.mkdirSync(vaultPath, { recursive: true });
       fs.mkdirSync(outputPath, { recursive: true });
-      fs.writeFileSync(path.join(outputPath, 'cache-file.html'), 'temp');
+      fs.writeFileSync(path.join(outputPath, 'file.html'), 'CONTENT');
 
-      const isInsideVault = outputPath.startsWith(vaultPath);
-      expect(isInsideVault).toBe(true);
+      const mockPlugin = createMockPluginWithPaths(vaultPath, outputPath);
+      const generator = new SiteGenerator(mockPlugin as any);
 
-      const isAbsolute = isAbsolutePath(outputPath);
-      const isOutsideVault = isAbsolute && !outputPath.startsWith(vaultPath);
+      await emptyClearFunction((generator as any), outputPath);
 
-      expect(isOutsideVault).toBe(false);
+      expect(fs.existsSync(path.join(outputPath, 'file.html'))).toBe(true);
 
       fs.rmSync(tmpDir, { recursive: true });
     });
   });
 });
 
-function listFilesRecursively(dir: string): string[] {
-  const files: string[] = [];
-
-  if (!fs.existsSync(dir)) return files;
-
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...listFilesRecursively(fullPath));
-    } else {
-      files.push(path.relative(dir, fullPath));
-    }
-  }
-
-  return files;
-}
-
-async function simulateClearAndReturnRemovedFiles(
-  vaultPath: string,
-  outputPath: string,
-  filesToClear: string[]
-): Promise<string[]> {
-  const removed: string[] = [];
-  const isOutsideVault = isAbsolutePath(outputPath) && !outputPath.startsWith(vaultPath);
-
-  if (isOutsideVault) {
-    if (fs.existsSync(outputPath)) {
-      const files = fs.readdirSync(outputPath);
-      for (const file of files) {
-        const filePath = path.join(outputPath, file);
-        if (fs.lstatSync(filePath).isDirectory()) {
-          fs.rmSync(filePath, { recursive: true, force: true });
-          removed.push(file);
+function createMockPluginWithPaths(vaultPath: string, outputPath: string) {
+  const adapter = {
+    exists: vi.fn().mockImplementation((p: string) => {
+      const resolved = resolveVaultRelativePath(vaultPath, p);
+      return Promise.resolve(fs.existsSync(resolved));
+    }),
+    mkdir: vi.fn().mockResolvedValue(undefined),
+    list: vi.fn().mockImplementation((p: string) => {
+      const resolved = resolveVaultRelativePath(vaultPath, p);
+      if (!fs.existsSync(resolved)) return Promise.resolve({ files: [], folders: [] });
+      const entries = fs.readdirSync(resolved, { withFileTypes: true });
+      const basePath = resolved.endsWith('/') ? resolved : resolved + '/';
+      return Promise.resolve({
+        files: entries.filter(e => e.isFile()).map(e => basePath + e.name),
+        folders: entries.filter(e => e.isDirectory()).map(e => basePath + e.name)
+      });
+    }),
+    remove: vi.fn().mockImplementation((p: string) => {
+      const resolved = resolveVaultRelativePath(vaultPath, p);
+      if (fs.existsSync(resolved)) {
+        if (fs.statSync(resolved).isDirectory()) {
+          fs.rmSync(resolved, { recursive: true, force: true });
         } else {
-          fs.unlinkSync(filePath);
-          removed.push(file);
+          fs.unlinkSync(resolved);
         }
       }
-    }
-  }
+      return Promise.resolve(undefined);
+    }),
+    write: vi.fn().mockResolvedValue(undefined),
+    read: vi.fn().mockResolvedValue(''),
+    copy: vi.fn().mockResolvedValue(undefined),
+    getBasePath: vi.fn().mockReturnValue(vaultPath)
+  };
 
-  return removed;
+  return {
+    settings: {
+      outputDirectory: outputPath,
+      siteTitle: 'Test',
+      siteDescription: '',
+      siteUrl: 'https://test.com',
+      includeAttachments: false,
+      generateSitemap: false,
+      generateRobotsTxt: false,
+      processWikilinks: false,
+      processEmbeds: false,
+      ignoredFolders: [],
+      previewServerPort: 3000,
+      autoRegenerate: false,
+      postsFolder: 'posts',
+      pagesFolder: 'pages'
+    },
+    app: {
+      vault: {
+        adapter,
+        getName: () => 'test-vault'
+      }
+    },
+    getVaultRootPath: () => vaultPath
+  };
 }
 
-async function emptyClearFunction(_outputPath: string): Promise<void> {
+function resolveVaultRelativePath(vaultPath: string, inputPath: string): string {
+  if (path.isAbsolute(inputPath)) {
+    return inputPath;
+  }
+  return path.join(vaultPath, inputPath);
+}
+
+async function emptyClearFunction(generator: any, _outputPath: string): Promise<void> {
   return;
 }
