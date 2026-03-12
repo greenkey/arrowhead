@@ -81,7 +81,7 @@ export default class ArrowheadPlugin extends Plugin {
 
   private async openPreview(): Promise<void> {
     const fileExporter = new FileExporter(this);
-    
+
     const validation = await fileExporter.validateOutputPath();
     if (!validation.valid) {
       new Notice(`Invalid output path: ${validation.error}`);
@@ -89,19 +89,19 @@ export default class ArrowheadPlugin extends Plugin {
     }
 
     const outputPath = await fileExporter.getAbsoluteOutputPath();
-    
+
     if (!isServerRunning()) {
       await startServer(outputPath, this.settings.previewServerPort);
       this.updateLiveModeIcon();
+      await this.generateSite();
     }
-    
+
     if (!this.settings.autoRegenerate) {
       this.settings.autoRegenerate = true;
       await this.saveSettings();
       this.updateLiveModeIcon();
-      await this.generateSite();
     }
-    
+
     const url = getServerUrl();
     window.open(url, "_blank");
     new Notice(`Preview opened at ${url}`);
@@ -173,9 +173,7 @@ export default class ArrowheadPlugin extends Plugin {
       return;
     }
 
-    if (beforeFirstGeneration()) {
-      await this.fileExporter.clearOutputDirectory();
-    }
+    await this.fileExporter.clearOutputDirectory();
 
     this.generationInProgress = true;
     if (!isAutoRegenerate) {
