@@ -173,8 +173,6 @@ export default class ArrowheadPlugin extends Plugin {
       return;
     }
 
-    await this.fileExporter.clearOutputDirectory();
-
     this.generationInProgress = true;
     if (!isAutoRegenerate) {
       new Notice("Generating static site...");
