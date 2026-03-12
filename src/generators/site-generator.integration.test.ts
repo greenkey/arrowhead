@@ -319,6 +319,61 @@ title: Markdown Test
       expect(htmlContent).toContain('<strong>Bold text</strong>');
       expect(htmlContent).toContain('<em>italic text</em>');
     });
+
+    it('should not add <br> tags between list items', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/list-test.md',
+          name: 'list-test.md',
+          extension: 'md',
+          content: `---
+title: List Test
+---
+# Test List
+
+- Item 1
+- Item 2
+- Item 3
+
+Regular text with line break.
+Second line of text.
+`,
+          frontmatter: { title: 'List Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'list-test.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      expect(htmlContent).toContain('<ul>');
+      expect(htmlContent).toContain('<li>Item 1</li>');
+      expect(htmlContent).toContain('<li>Item 2</li>');
+      expect(htmlContent).toContain('<li>Item 3</li>');
+      expect(htmlContent).toContain('</ul>');
+      
+      // Ensure <br> tags are NOT between list items
+      const listSectionMatch = htmlContent.match(/<ul>[\s\S]*?<\/ul>/);
+      expect(listSectionMatch).not.toBeNull();
+      
+      const listSection = listSectionMatch![0];
+      expect(listSection).not.toContain('<br>');
+      
+      // Ensure <br> tags ARE present in regular text sections
+      expect(htmlContent).toContain('<br>');
+      expect(htmlContent).toContain('Regular text with line break.<br>Second line of text.');
+    });
   });
 
   describe('End-to-end generation workflow', () => {

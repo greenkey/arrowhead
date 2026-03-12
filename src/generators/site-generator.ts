@@ -51,12 +51,10 @@ export class SiteGenerator {
   private removeFrontmatter(content: string): string {
     const frontmatterRegex = /^---\n[\s\S]*?\n---\s*\n?/;
     const result = content.replace(frontmatterRegex, "");
-    console.log("[DEBUG] Frontmatter stripped:", result !== content);
     return result;
   }
 
   private async generatePage(fileData: VaultFile, vaultData: VaultData, outputPath: string): Promise<void> {
-    console.log("[DEBUG] generatePage for:", fileData.path);
     const contentWithoutFrontmatter = this.removeFrontmatter(fileData.content);
     const contentWithLinks = this.processLinks(contentWithoutFrontmatter, fileData, vaultData);
     const processedEmbeds = this.processEmbeds(contentWithLinks, fileData, vaultData);
@@ -138,11 +136,54 @@ export class SiteGenerator {
     processed = processed.replace(/`(.+?)`/g, "<code>$1</code>");
     
     processed = processed.replace(/^- (.+)$/gm, "<li>$1</li>");
-    processed = processed.replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>");
+    processed = processed.replace(/(<li>.*?<\/li>\n*)+/g, (match) => "<ul>" + match.replace(/\n/g, '') + "</ul>");
     
-    processed = processed.replace(/\n/g, "<br>");
+    processed = this.replaceNewlinesOutsideHtml(processed);
     
     return processed;
+  }
+
+  private replaceNewlinesOutsideHtml(content: string): string {
+    let result = '';
+    let i = 0;
+    let depth = 0;
+    
+    while (i < content.length) {
+      const char = content[i];
+      
+      if (char === '<') {
+        if (content.slice(i).startsWith('</')) {
+          const closeTagMatch = content.slice(i).match(/^<\/([a-zA-Z][a-zA-Z0-9]*)>/);
+          if (closeTagMatch) {
+            depth = Math.max(0, depth - 1);
+            result += content.slice(i, i + closeTagMatch[0].length);
+            i += closeTagMatch[0].length;
+            continue;
+          }
+        } else {
+          const openTagMatch = content.slice(i).match(/^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/);
+          if (openTagMatch) {
+            depth++;
+            result += content.slice(i, i + openTagMatch[0].length);
+            i += openTagMatch[0].length;
+            continue;
+          }
+        }
+        result += char;
+        i++;
+        continue;
+      }
+      
+      if (char === '\n' && depth === 0) {
+        result += '<br>';
+      } else {
+        result += char;
+      }
+      
+      i++;
+    }
+    
+    return result;
   }
 
   private processLinks(content: string, file: VaultFile, vaultData: VaultData): string {
