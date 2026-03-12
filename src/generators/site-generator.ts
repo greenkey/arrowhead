@@ -58,9 +58,8 @@ export class SiteGenerator {
   private async generatePage(fileData: VaultFile, vaultData: VaultData, outputPath: string): Promise<void> {
     console.log("[DEBUG] generatePage for:", fileData.path);
     const contentWithoutFrontmatter = this.removeFrontmatter(fileData.content);
-    const pageContent = this.processMarkdown(contentWithoutFrontmatter);
-    const processedLinks = this.processLinks(contentWithoutFrontmatter, fileData, vaultData);
-    const processedEmbeds = this.processEmbeds(contentWithoutFrontmatter, fileData, vaultData);
+    const contentWithLinks = this.processLinks(contentWithoutFrontmatter, fileData, vaultData);
+    const processedEmbeds = this.processEmbeds(contentWithLinks, fileData, vaultData);
 
     const pageTitle = this.getTitle(fileData);
     const contentWithTitle = `<h1 class="page-title">${pageTitle}</h1>\n${processedEmbeds}`;
@@ -91,13 +90,13 @@ export class SiteGenerator {
 
   private processMarkdown(content: string): string {
     let processed = content;
-    
+
     if (this.plugin.settings.processWikilinks) {
       processed = this.processWikiLinks(processed);
     }
-    
+
     processed = this.processMarkdownSyntax(processed);
-    
+
     return processed;
   }
 

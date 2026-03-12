@@ -385,6 +385,127 @@ title: Markdown Test
     });
   });
 
+  describe('Link processing', () => {
+    it('should process wikilinks and convert to HTML anchors', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      mockPlugin.settings.processWikilinks = true;
+
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/about.md',
+          name: 'about.md',
+          extension: 'md',
+          content: `---
+title: About Page
+---
+Welcome to our site. Check out our [[posts/first-post|awesome first post]]!
+
+Also see [[pages/contact|contact us]] for more info.
+`,
+          frontmatter: { title: 'About Page' },
+          tags: [],
+          links: [
+            { target: 'posts/first-post', originalText: '[[posts/first-post|awesome first post]]', displayText: 'awesome first post', type: 'wiki' },
+            { target: 'pages/contact', originalText: '[[pages/contact]]', displayText: 'contact us', type: 'wiki' }
+          ],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 150,
+          pageType: 'page'
+        },
+        {
+          path: 'posts/first-post.md',
+          name: 'first-post.md',
+          extension: 'md',
+          content: `---
+title: First Post
+date: 2024-01-15
+---
+This is our first post content.
+`,
+          frontmatter: { title: 'First Post', date: '2024-01-15' },
+          tags: ['welcome'],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'post'
+        },
+        {
+          path: 'pages/contact.md',
+          name: 'contact.md',
+          extension: 'md',
+          content: `---
+title: Contact
+---
+Get in touch with us.
+`,
+          frontmatter: { title: 'Contact' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 50,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const aboutPath = path.join(outputPath, 'pages', 'about.html');
+      const aboutContent = fs.readFileSync(aboutPath, 'utf-8');
+
+      expect(aboutContent).toContain('href="/posts/first-post.html">awesome first post</a>');
+      expect(aboutContent).toContain('href="/pages/contact.html">contact us</a>');
+    });
+
+    it('should process external markdown links', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      mockPlugin.settings.processWikilinks = false;
+
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/reference.md',
+          name: 'reference.md',
+          extension: 'md',
+          content: `---
+title: Reference Page
+---
+Check out [Obsidian Help](https://help.obsidian.md/) for more info.
+
+Also see [this cool project](https://github.com/anomalyco/arrowhead) on GitHub.
+`,
+          frontmatter: { title: 'Reference Page' },
+          tags: [],
+          links: [
+            { target: 'https://help.obsidian.md/', originalText: '[Obsidian Help](https://help.obsidian.md/)', displayText: 'Obsidian Help', type: 'url' },
+            { target: 'https://github.com/anomalyco/arrowhead', originalText: '[this cool project](https://github.com/anomalyco/arrowhead)', displayText: 'this cool project', type: 'url' }
+          ],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const refPath = path.join(outputPath, 'pages', 'reference.html');
+      const refContent = fs.readFileSync(refPath, 'utf-8');
+
+      expect(refContent).toContain('<a href="https://help.obsidian.md/" target="_blank" rel="noopener">Obsidian Help</a>');
+      expect(refContent).toContain('<a href="https://github.com/anomalyco/arrowhead" target="_blank" rel="noopener">this cool project</a>');
+    });
+  });
+
   describe('Attachment handling', () => {
     it('should copy attachments to assets folder when includeAttachments is enabled', async () => {
       const mockPlugin = createMockPlugin(outputPath);
