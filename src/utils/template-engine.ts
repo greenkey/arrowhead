@@ -490,6 +490,14 @@ hr {
   margin-top: 0;
 }
 
+.page-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
 .site-footer {
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);

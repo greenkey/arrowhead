@@ -62,13 +62,16 @@ export class SiteGenerator {
     const processedLinks = this.processLinks(contentWithoutFrontmatter, fileData, vaultData);
     const processedEmbeds = this.processEmbeds(contentWithoutFrontmatter, fileData, vaultData);
 
+    const pageTitle = this.getTitle(fileData);
+    const contentWithTitle = `<h1 class="page-title">${pageTitle}</h1>\n${processedEmbeds}`;
+
     const dateStr = fileData.mattermost?.date 
       ? fileData.mattermost.date 
       : new Date(fileData.created).toISOString();
 
     const html = await this.wrapInTemplate({
-      title: this.getTitle(fileData),
-      content: processedEmbeds,
+      title: pageTitle,
+      content: contentWithTitle,
       frontmatter: fileData.frontmatter,
       date: dateStr,
       tags: fileData.tags,
