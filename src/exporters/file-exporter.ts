@@ -63,35 +63,6 @@ export class FileExporter {
     return validateOutputPath(inputPath, vaultPath);
   }
 
-  async clearOutputDirectory(): Promise<void> {
-    const outputPath = await this.getAbsoluteOutputPath();
-    
-    try {
-      const adapter = this.plugin.app.vault.adapter;
-      
-      if (await this.directoryExists(outputPath)) {
-        const files = await this.listFilesRecursive(outputPath);
-        
-        for (const file of files) {
-          try {
-            await adapter.remove(file);
-          } catch (e) {
-          }
-        }
-        
-        const dirs = await this.listDirectoriesRecursive(outputPath);
-        for (const dir of dirs) {
-          try {
-            await adapter.rmdir(dir, true);
-          } catch (e) {
-          }
-        }
-      }
-    } catch (error) {
-      console.warn("Could not clear output directory:", error);
-    }
-  }
-
   async directoryExists(path: string): Promise<boolean> {
     try {
       const adapter = this.plugin.app.vault.adapter;
