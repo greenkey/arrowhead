@@ -20,7 +20,10 @@ describe('Main Plugin Integration Tests', () => {
   });
 
   afterEach(() => {
-    fs.rmSync(tmpDir, { recursive: true });
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {
+    }
   });
 
   describe('Settings Management', () => {
@@ -571,10 +574,10 @@ date: 2026-03-10
     });
 
     it('should handle ignored folder filtering', () => {
-      const ignoredFolders = new Set(['.obsidian', 'templates', 'node_modules']);
+      const ignoredFolders = ['.obsidian', 'templates', 'node_modules'];
 
       const isIgnored = (folderPath: string): boolean => {
-        return ignoredFolders.has(folderPath) || folderPath.startsWith('.');
+        return folderPath.startsWith('.') || ignoredFolders.some(f => folderPath.startsWith(f + '/'));
       };
 
       expect(isIgnored('.obsidian')).toBe(true);

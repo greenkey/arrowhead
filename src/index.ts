@@ -5,7 +5,6 @@ export { DEFAULT_SETTINGS } from "./settings/settings";
 export { SiteGenerator } from "./generators/site-generator";
 export { VaultWalker } from "./utils/vault-walker";
 export { PathResolver } from "./utils/path-resolver";
-export { MarkdownProcessor } from "./processors/markdown-processor";
 export { TemplateEngine } from "./utils/template-engine";
 export { FileExporter } from "./exporters/file-exporter";
 export { ExportModal } from "./ui/export-modal";
