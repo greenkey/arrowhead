@@ -50,7 +50,6 @@ describe('PreviewServer Integration Tests', () => {
     fs.writeFileSync(path.join(outputPath, 'about.html'), '<html><body><h1>About</h1></body></html>');
     fs.mkdirSync(path.join(outputPath, 'assets'), { recursive: true });
     fs.writeFileSync(path.join(outputPath, 'assets', 'styles.css'), 'body { margin: 0; }');
-    fs.writeFileSync(path.join(outputPath, 'posts', 'article.html'), '<html><body><h1>Article</h1></body></html>');
     fs.mkdirSync(path.join(outputPath, 'posts'), { recursive: true });
     fs.writeFileSync(path.join(outputPath, 'posts', 'article.html'), '<html><body><h1>Article</h1></body></html>');
     fs.mkdirSync(path.join(outputPath, 'subdir'), { recursive: true });

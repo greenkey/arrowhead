@@ -432,7 +432,7 @@ date: 2026-03-10
     it('should distinguish embeds from wikilinks', () => {
       const embedContent = `![Image](image.jpg) and ![[another-page]]`;
 
-      const embedRegex = /!\[\[([^]]+)\]\]/g;
+      const embedRegex = /!\[\[([^\]]+)\]\]/g;
       const embeds: string[] = [];
       let match: RegExpExecArray | null;
 
@@ -525,6 +525,8 @@ date: 2026-03-10
         outputDirectory: outputPath
       };
 
+      fs.mkdirSync(path.join(vaultPath, 'posts'), { recursive: true });
+      fs.mkdirSync(path.join(vaultPath, 'pages'), { recursive: true });
       fs.writeFileSync(path.join(vaultPath, 'posts', 'article.md'), `---\ntitle: Article\n---\n# Article Content`);
       fs.writeFileSync(path.join(vaultPath, 'pages', 'about.md'), `---\ntitle: About\n---\n# About Content`);
 
