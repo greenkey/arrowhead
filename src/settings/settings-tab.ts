@@ -22,7 +22,6 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     this.createSiteSettings(containerEl);
     this.createOutputSettings(containerEl);
-    this.createTemplateSettings(containerEl);
     this.createGenerationSettings(containerEl);
     this.createContentSettings(containerEl);
     this.createPreviewSettings(containerEl);
@@ -107,44 +106,6 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     resolvedPathDisplay = containerEl.createEl("div", { cls: "resolved-path-display" });
     this.updateResolvedPathDisplay(this.plugin.settings.outputDirectory, resolvedPathDisplay);
-  }
-
-  private createTemplateSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Template Settings" });
-    containerEl.createEl("p", { 
-      text: "Customize the appearance of your generated site", 
-      cls: "setting-description" 
-    });
-
-    containerEl.createEl("div", {
-      text: "⚠️ Beta: Template system is under active development",
-      cls: "arrowhead-beta-warning"
-    });
-
-    new Setting(containerEl)
-      .setName("Template")
-      .setDesc("Choose a template theme for your site")
-      .addDropdown(dropdown => {
-        dropdown.addOption("default", "Default Theme");
-        dropdown.addOption("minimal", "Minimal Theme");
-        dropdown.addOption("notebook", "Notebook Theme");
-        dropdown.addOption("custom", "Custom Template");
-        dropdown.setValue(this.plugin.settings.templateName);
-        dropdown.onChange(async (value) => {
-          this.plugin.settings.templateName = value;
-          await this.plugin.saveSettings();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName("Custom CSS")
-      .setDesc("Path to custom CSS file (relative to vault root)")
-      .addText(text => this.createTextSetting(text, "customCssPath"));
-
-    new Setting(containerEl)
-      .setName("Custom JavaScript")
-      .setDesc("Path to custom JavaScript file (relative to vault root)")
-      .addText(text => this.createTextSetting(text, "customJsPath"));
   }
 
   private createGenerationSettings(containerEl: HTMLElement): void {

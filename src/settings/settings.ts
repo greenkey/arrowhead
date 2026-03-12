@@ -2,7 +2,6 @@ import * as os from "os";
 
 export interface ArrowheadSettings {
   outputDirectory: string;
-  templateName: string;
   siteTitle: string;
   siteDescription: string;
   siteUrl: string;
@@ -11,8 +10,6 @@ export interface ArrowheadSettings {
   generateRobotsTxt: boolean;
   processWikilinks: boolean;
   processEmbeds: boolean;
-  customCssPath: string;
-  customJsPath: string;
   ignoredFolders: string[];
   previewServerPort: number;
   autoRegenerate: boolean;
@@ -46,7 +43,6 @@ export function validateOutputPath(path: string, vaultPath: string): { valid: bo
 
 export const DEFAULT_SETTINGS: ArrowheadSettings = {
   outputDirectory: `${os.tmpdir()}/arrowhead-output`,
-  templateName: "default",
   siteTitle: "My Obsidian Site",
   siteDescription: "A static website generated from my Obsidian vault",
   siteUrl: "https://example.com",
@@ -55,8 +51,6 @@ export const DEFAULT_SETTINGS: ArrowheadSettings = {
   generateRobotsTxt: true,
   processWikilinks: true,
   processEmbeds: true,
-  customCssPath: "",
-  customJsPath: "",
   ignoredFolders: [],
   previewServerPort: 3456,
   autoRegenerate: true,

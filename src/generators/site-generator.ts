@@ -8,12 +8,10 @@ import * as path from "path";
 export class SiteGenerator {
   private plugin: ArrowheadPlugin;
   private templateEngine: TemplateEngine;
-  private templateName: string;
 
   constructor(plugin: ArrowheadPlugin) {
     this.plugin = plugin;
     this.templateEngine = new TemplateEngine(plugin);
-    this.templateName = plugin.settings.templateName || "default";
   }
 
   async generate(vaultData: VaultData, outputPath: string): Promise<void> {
@@ -197,7 +195,7 @@ export class SiteGenerator {
     const siteTitle = this.plugin.settings.siteTitle;
     const siteDescription = this.plugin.settings.siteDescription;
 
-    const template = await this.templateEngine.loadTemplate(this.templateName);
+    const template = await this.templateEngine.loadTemplate("default");
 
     const pages = vaultData?.files
       .filter(file => file.pageType === 'page')
@@ -329,7 +327,7 @@ private pathToUrl(path: string): string {
         return { title, url };
       });
     
-    let template = await this.loadIndexTemplate(this.templateName);
+    let template = await this.loadIndexTemplate("default");
     
     const templateData: TemplateData = {
       title: this.plugin.settings.siteTitle,
