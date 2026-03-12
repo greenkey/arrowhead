@@ -1,5 +1,6 @@
 import ArrowheadPlugin from "../main";
 import { isAbsolutePath, validateOutputPath } from "../settings/settings";
+import * as path from "path";
 
 export class FileExporter {
   private plugin: ArrowheadPlugin;
@@ -14,19 +15,19 @@ export class FileExporter {
 
   async getAbsoluteOutputPath(): Promise<string> {
     const inputPath = this.plugin.settings.outputDirectory;
-    const vaultRoot = this.getVaultRootPath();
+    console.log(`[getAbsoluteOutputPath] Input: "${inputPath}"`);
 
-    console.log(`[getAbsoluteOutputPath] Input: "${inputPath}", Vault root: "${vaultRoot}"`);
+    const expandedPath = inputPath.replace("~", process.env.HOME || "");
 
-    if (isAbsolutePath(inputPath)) {
-      const expandedPath = inputPath.replace("~", process.env.HOME || "");
-      if (expandedPath.startsWith(vaultRoot)) {
-        return expandedPath;
-      }
+    if (isAbsolutePath(expandedPath)) {
+      console.log(`[getAbsoluteOutputPath] Absolute: "${expandedPath}"`);
       return expandedPath;
     }
 
-    return `${vaultRoot}/${inputPath}`;
+    const vaultRoot = this.getVaultRootPath();
+    const absolutePath = path.join(vaultRoot, expandedPath);
+    console.log(`[getAbsoluteOutputPath] Relative to absolute: "${absolutePath}"`);
+    return absolutePath;
   }
 
   getRelativeOutputPath(): string {
