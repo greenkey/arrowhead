@@ -51,7 +51,14 @@ describe('SiteGenerator Integration Tests', () => {
         return Promise.resolve(undefined);
       }),
       read: vi.fn().mockResolvedValue(''),
-      copy: vi.fn().mockResolvedValue(undefined),
+      copy: vi.fn().mockImplementation(async (source: string, target: string) => {
+        const sourcePath = path.isAbsolute(source) ? source : path.join(vaultPath, source);
+        if (fs.existsSync(sourcePath)) {
+          const content = fs.readFileSync(sourcePath);
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.writeFileSync(target, content);
+        }
+      }),
       getBasePath: vi.fn().mockReturnValue(vaultPath),
       cachedRead: vi.fn().mockResolvedValue('')
     };
@@ -77,7 +84,12 @@ describe('SiteGenerator Integration Tests', () => {
         vault: {
           adapter,
           getName: () => 'test-vault',
-          getAbstractFileByPath: () => null
+          getAbstractFileByPath: (filePath: string) => {
+            if (filePath.endsWith('.jpg') || filePath.endsWith('.png') || filePath.endsWith('.gif')) {
+              return mockFile(filePath, path.basename(filePath));
+            }
+            return null;
+          }
         },
         metadataCache: {
           getFileCache: () => ({ frontmatter: {} })
@@ -87,16 +99,20 @@ describe('SiteGenerator Integration Tests', () => {
     };
   }
 
-  function createVaultData(files: VaultFile[]): VaultData {
+  function createVaultData(files: VaultFile[], attachments: VaultFile[] = []): VaultData {
     return {
       files,
       folders: [],
       tags: new Map(),
       links: [],
-      attachments: [],
+      attachments,
       totalSize: 0,
       excludedFiles: []
     };
+  }
+
+  function mockFile(path: string, name: string): any {
+    return { path, name, stat: { mtime: Date.now() } };
   }
 
   describe('HTML output generation', () => {
@@ -366,6 +382,169 @@ title: Markdown Test
 
       expect(fs.existsSync(path.join(outputPath, 'index.html'))).toBe(true);
       expect(fs.existsSync(path.join(outputPath, 'assets', 'styles.css'))).toBe(true);
+    });
+  });
+
+  describe('Attachment handling', () => {
+    it('should copy attachments to assets folder when includeAttachments is enabled', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      mockPlugin.settings.includeAttachments = true;
+
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      const imagePath = 'images/photo.jpg';
+      const sourceImagePath = path.join(vaultPath, imagePath);
+      fs.mkdirSync(path.dirname(sourceImagePath), { recursive: true });
+      fs.writeFileSync(sourceImagePath, 'fake-image-content');
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/with-image.md',
+          name: 'with-image.md',
+          extension: 'md',
+          content: `---
+title: Page with Image
+---
+![](/${imagePath})
+`,
+          frontmatter: { title: 'Page with Image' },
+          tags: [],
+          links: [],
+          embeds: [imagePath],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ], [
+        {
+          path: imagePath,
+          name: 'photo.jpg',
+          extension: 'jpg',
+          content: 'fake-image-content',
+          frontmatter: {},
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 1024,
+          pageType: undefined
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const assetsImagePath = path.join(outputPath, 'assets', imagePath);
+      expect(fs.existsSync(assetsImagePath)).toBe(true);
+    });
+
+    it('should embed image references in generated HTML', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      mockPlugin.settings.includeAttachments = true;
+
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      const imagePath = 'diagram.png';
+      const vaultData = createVaultData([
+        {
+          path: 'posts/tutorial.md',
+          name: 'tutorial.md',
+          extension: 'md',
+          content: `---
+title: Tutorial
+date: 2024-03-01
+---
+See this diagram:
+
+![](${imagePath})
+`,
+          frontmatter: { title: 'Tutorial', date: '2024-03-01' },
+          tags: [],
+          links: [],
+          embeds: [imagePath],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 150,
+          pageType: 'post'
+        }
+      ], [
+        {
+          path: imagePath,
+          name: 'diagram.png',
+          extension: 'png',
+          content: 'binary-image-data',
+          frontmatter: {},
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 2048,
+          pageType: undefined
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'posts', 'tutorial.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      expect(htmlContent).toContain('<img');
+      expect(htmlContent).toContain(imagePath);
+    });
+
+    it('should handle nested attachment paths', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      mockPlugin.settings.includeAttachments = true;
+
+      const generator = new SiteGenerator(mockPlugin as any);
+
+      const nestedImagePath = 'resources/screenshots/main-view.png';
+      const sourceImagePath = path.join(vaultPath, nestedImagePath);
+      fs.mkdirSync(path.dirname(sourceImagePath), { recursive: true });
+      fs.writeFileSync(sourceImagePath, 'image-data');
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/guide.md',
+          name: 'guide.md',
+          extension: 'md',
+          content: `---
+title: Guide
+---
+![Main View](${nestedImagePath})
+`,
+          frontmatter: { title: 'Guide' },
+          tags: [],
+          links: [],
+          embeds: [nestedImagePath],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ], [
+        {
+          path: nestedImagePath,
+          name: 'main-view.png',
+          extension: 'png',
+          content: 'image-data',
+          frontmatter: {},
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 4096,
+          pageType: undefined
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const assetsPath = path.join(outputPath, 'assets', 'resources', 'screenshots');
+      expect(fs.existsSync(path.join(assetsPath, 'main-view.png'))).toBe(true);
     });
   });
 });

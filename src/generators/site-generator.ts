@@ -170,19 +170,21 @@ export class SiteGenerator {
 
   private processEmbeds(content: string, file: VaultFile, vaultData: VaultData): string {
     let processed = this.processMarkdown(content);
-    
+
     for (const embed of file.embeds) {
       if (embed.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
         const assetPath = this.embedToAssetPath(embed);
         const imgTag = `<img src="${assetPath}" alt="${embed}" loading="lazy">`;
         processed = processed.replace(`![[${embed}]]`, imgTag);
+        processed = processed.replace(`![](${embed})`, imgTag);
       } else if (embed.match(/\.md$/i)) {
         const link = this.embedToPageLink(embed);
         const embedTag = `<div class="embed" data-src="${link}"></div>`;
         processed = processed.replace(`![[${embed}]]`, embedTag);
+        processed = processed.replace(`![](${embed})`, embedTag);
       }
     }
-    
+
     return processed;
   }
 
