@@ -19,7 +19,7 @@ The Arrowhead Static Site Generator is an Obsidian plugin that converts markdown
 ## Quick Links
 
 - **Bug Reports**: GitHub Issues
-- **Source Code**: https://github.com/yourusername/arrowhead-obsidian-plugin
+- **Source Code**: https://codeberg.org/greenkey/arrowhead
 - **Obsidian API**: https://docs.obsidian.md/Plugins/Getting+started/Build+a+plugin
 
 ## For LLM Agents

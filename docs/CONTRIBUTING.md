@@ -11,7 +11,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/arrowhead-obsidian-plugin.git
+git clone https://codeberg.org/greenkey/arrowhead.git
 cd arrowhead-obsidian-plugin
 
 # Install dependencies
