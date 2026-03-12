@@ -563,6 +563,7 @@ title: Page with Image
     it('should embed image references in generated HTML', async () => {
       const mockPlugin = createMockPlugin(outputPath);
       mockPlugin.settings.includeAttachments = true;
+      mockPlugin.settings.processEmbeds = true;
 
       const generator = new SiteGenerator(mockPlugin as any);
 

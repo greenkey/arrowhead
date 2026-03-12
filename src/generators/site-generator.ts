@@ -168,6 +168,10 @@ export class SiteGenerator {
   }
 
   private processEmbeds(content: string, file: VaultFile, vaultData: VaultData): string {
+    if (!this.plugin.settings.processEmbeds) {
+      return this.processMarkdown(content);
+    }
+
     let processed = this.processMarkdown(content);
 
     for (const embed of file.embeds) {
@@ -176,11 +180,6 @@ export class SiteGenerator {
         const imgTag = `<img src="${assetPath}" alt="${embed}" loading="lazy">`;
         processed = processed.replace(`![[${embed}]]`, imgTag);
         processed = processed.replace(`![](${embed})`, imgTag);
-      } else if (embed.match(/\.md$/i)) {
-        const link = this.embedToPageLink(embed);
-        const embedTag = `<div class="embed" data-src="${link}"></div>`;
-        processed = processed.replace(`![[${embed}]]`, embedTag);
-        processed = processed.replace(`![](${embed})`, embedTag);
       }
     }
 
@@ -189,10 +188,6 @@ export class SiteGenerator {
 
   private embedToAssetPath(embed: string): string {
     return `../assets/${embed}`;
-  }
-
-  private embedToPageLink(embed: string): string {
-    return this.wikiLinkToUrl(embed.replace(/\.md$/i, ""));
   }
 
   private async wrapInTemplate(pageData: { title: string; content: string; frontmatter: Record<string, unknown>; date?: string; tags: string[]; lastModified: string }, vaultData?: VaultData): Promise<string> {
