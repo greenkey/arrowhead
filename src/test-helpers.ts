@@ -106,8 +106,11 @@ export class TestVaultManager {
     return this.outputPath;
   }
 
-  async getFileContent(relativePath: string): Promise<string> {
+  async getFileContent(relativePath: string): Promise<string | undefined> {
     const fullPath = path.join(this.vaultPath, relativePath);
+    if (!fs.existsSync(fullPath)) {
+      return undefined;
+    }
     return fs.readFileSync(fullPath, 'utf-8');
   }
 

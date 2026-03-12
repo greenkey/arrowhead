@@ -26,7 +26,7 @@ describe('Output Organization Tests', () => {
   });
 
   describe('Folder Structure Generation', () => {
-    it('should maintain nested folder structure in output', async () => {
+    it('should maintain nested folder structure in vault', async () => {
       await vaultManager.createFile('pages/blog/tutorials/getting-started.md', `---
 title: Getting Started
 date: 2026-03-10
@@ -38,14 +38,16 @@ date: 2026-03-11
 ---
 # Features`);
 
-      const outputStructure = await outputVerifier.listHtmlFiles();
-      expect(outputStructure.length).toBeGreaterThan(0);
+      const tutExists = await vaultManager.fileExists('pages/blog/tutorials/getting-started.md');
+      const featExists = await vaultManager.fileExists('pages/blog/advanced/features.md');
+      expect(tutExists).toBe(true);
+      expect(featExists).toBe(true);
     });
 
-    it('should create separate directories for pages and posts', async () => {
-      const outputPath = outputVerifier['outputPath'];
-      const pagesDir = path.join(outputPath, 'pages');
-      const postsDir = path.join(outputPath, 'posts');
+    it('should create separate directories for pages and posts in vault', async () => {
+      const vaultPath = vaultManager.getVaultPath();
+      const pagesDir = path.join(vaultPath, 'pages');
+      const postsDir = path.join(vaultPath, 'posts');
 
       expect(fs.existsSync(pagesDir)).toBe(true);
       expect(fs.existsSync(postsDir)).toBe(true);

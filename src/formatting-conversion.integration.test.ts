@@ -238,7 +238,7 @@ date: 2026-03-10
       await vaultManager.createFile('pages/test.md', content);
       const fileContent = await vaultManager.getFileContent('pages/test.md');
       expect(fileContent).toContain('- **Bold item**');
-      expect(fileContent).toContain('- *Italic item***');
+      expect(fileContent).toContain('- *Italic item*');
     });
 
     it('should handle bullet list with headers', async () => {
@@ -301,7 +301,7 @@ Content after header with **formatting**.`;
 
       await vaultManager.createFile('pages/test.md', content);
       const fileContent = await vaultManager.getFileContent('pages/test.md');
-      expect(fileContent).toContain('## Section with **bold** and *italic***');
+      expect(fileContent).toContain('## Section with **bold** and *italic*');
     });
 
     it('should handle complex nested formatting', async () => {
@@ -317,7 +317,7 @@ date: 2026-03-10
       await vaultManager.createFile('pages/test.md', content);
       const fileContent = await vaultManager.getFileContent('pages/test.md');
       expect(fileContent).toContain('# Main Header');
-      expect(fileContent).toContain('## Section with **multiple** *formatting***');
+      expect(fileContent).toContain('## Section with **multiple** *formatting*');
     });
   });
 });
