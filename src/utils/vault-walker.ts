@@ -275,7 +275,7 @@ export class VaultWalker {
 
   private extractEmbeds(content: string): string[] {
     const embeds: string[] = [];
-    const embedRegex = /!\[\[([^]]+)\]\]/g;
+    const embedRegex = /!\[\[([^\]]+)\]\]/g;
     let match;
     
     while ((match = embedRegex.exec(content)) !== null) {

@@ -216,3 +216,133 @@ export function setupMockVaultFileOperations(vault: MockVault, files: MockVaultF
     return Promise.resolve();
   });
 }
+
+export function createMockVaultFile(params: {
+  path: string;
+  content: string;
+  frontmatter?: Record<string, unknown>;
+  ctime?: number;
+  mtime?: number;
+}): MockVaultFile {
+  const name = params.path.split('/').pop() || params.path;
+  const extension = name.split('.').pop() || '';
+  const now = Date.now();
+  return {
+    path: params.path,
+    name: name,
+    extension: extension,
+    content: params.content,
+    stat: {
+      ctime: params.ctime || now - 10000,
+      mtime: params.mtime || now,
+      size: params.content.length
+    }
+  };
+}
+
+export function createMockMetadataCacheWithFrontmatter(frontmatter: Record<string, unknown>): MockMetadataCache {
+  return {
+    getFileCache: vi.fn().mockReturnValue({
+      frontmatter: frontmatter,
+      links: [],
+      embeds: []
+    }),
+    setCache: vi.fn(),
+    getFrontmatter: vi.fn().mockReturnValue(frontmatter)
+  };
+}
+
+export interface TestVaultFile {
+  path: string;
+  content: string;
+  frontmatter?: Record<string, unknown>;
+}
+
+export function createMockVaultWithTestFiles(
+  files: TestVaultFile[],
+  vaultPath: string = '/test/vault'
+): MockVault {
+  const mockFiles: MockVaultFile[] = files.map(file =>
+    createMockVaultFile({
+      path: file.path,
+      content: file.content,
+      frontmatter: file.frontmatter
+    })
+  );
+
+  const vault = createMockVault();
+  vault.getName = vi.fn().mockReturnValue('test-vault');
+  vault.getMarkdownFiles = vi.fn().mockReturnValue(mockFiles.filter(f => f.extension === 'md'));
+  vault.getFiles = vi.fn().mockReturnValue(mockFiles);
+
+  vault.cachedRead = vi.fn().mockImplementation((file: MockVaultFile) => {
+    const found = mockFiles.find(f => f.path === file.path);
+    return Promise.resolve(found?.content || '');
+  });
+
+  vault.read = vi.fn().mockImplementation((file: MockVaultFile) => {
+    const found = mockFiles.find(f => f.path === file.path);
+    return Promise.resolve(found?.content || '');
+  });
+
+  vault.getAbstractFileByPath = vi.fn().mockImplementation((path: string) => {
+    return mockFiles.find(f => f.path === path) || null;
+  });
+
+  const adapter = createMockVaultAdapter();
+  adapter.getBasePath = vi.fn().mockReturnValue(vaultPath);
+  vault.adapter = adapter;
+
+  return vault;
+}
+
+export function createEnhancedMockPlugin(params: {
+  vaultFiles?: TestVaultFile[];
+  vaultPath?: string;
+  settings?: Partial<MockPluginSettings>;
+  getVaultRootPathImpl?: () => string;
+}): MockPlugin {
+  const vaultPath = params.vaultPath || '/test/vault';
+  const vault = params.vaultFiles
+    ? createMockVaultWithTestFiles(params.vaultFiles, vaultPath)
+    : createMockVault();
+
+  const getVaultRootPathFn = params.getVaultRootPathImpl || (() => vaultPath);
+  return {
+    settings: createMockPluginSettings(params.settings),
+    app: {
+      vault: vault,
+      metadataCache: createMockMetadataCache(),
+      workspace: {
+        on: vi.fn(),
+        off: vi.fn()
+      }
+    },
+    loadSettings: vi.fn().mockResolvedValue(undefined),
+    saveSettings: vi.fn().mockResolvedValue(undefined),
+    generateSite: vi.fn().mockResolvedValue(undefined),
+    getVaultRootPath: vi.fn().mockImplementation(getVaultRootPathFn)
+  };
+}
+
+export function simulateFileModification(vault: MockVault, filePath: string, newContent: string): void {
+  const files = (vault.getMarkdownFiles as unknown as () => MockVaultFile[])();
+  const file = files.find(f => f.path === filePath);
+  if (file) {
+    file.content = newContent;
+    file.stat.mtime = Date.now();
+    file.stat.size = newContent.length;
+  }
+}
+
+export function createVaultConfig(params: {
+  postsFolder?: string;
+  pagesFolder?: string;
+  ignoredFolders?: string[];
+}): MockPluginSettings {
+  return createMockPluginSettings({
+    postsFolder: params.postsFolder || 'posts',
+    pagesFolder: params.pagesFolder || 'pages',
+    ignoredFolders: params.ignoredFolders || []
+  });
+}
