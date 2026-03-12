@@ -22,7 +22,7 @@
     "test:quiet": "vitest run --silent",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:quiet": "vitest run --config vitest.integration.config.ts --silent",
-    "test:all": "npm run test && npm run test:integration"
+    "test:all": "npm run test"
   },
   "keywords": [
     "obsidian",
