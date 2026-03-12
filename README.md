@@ -92,3 +92,9 @@ See the [docs/](docs/) folder for:
 - Code structure guide
 - Contributing guidelines
 - Testing documentation
+
+---
+
+## About This Project
+
+This plugin and its documentation were created with the assistance of [Opencode](https://opencode.ai), an AI-powered development tool for software engineers.
