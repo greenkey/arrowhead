@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "test:quiet": "vitest run --silent"
+    "test:quiet": "vitest run --silent",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "keywords": [
     "obsidian",
