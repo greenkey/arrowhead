@@ -29,7 +29,7 @@ jobs:
       - name: Run TypeScript type check
         run: npm run typecheck
 
-  unit-tests:
+  tests:
     runs-on: codeberg-small
     needs: lint-and-typecheck
 
@@ -49,43 +49,12 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      # - name: Upload test results
-      #   uses: https://code.forgejo.org/actions/upload-artifact@v4
-      #   if: always()
-      #   with:
-      #     name: unit-test-results
-      #     path: test-results/
-
-  integration-tests:
-    runs-on: codeberg-small
-    needs: lint-and-typecheck
-
-    steps:
-      - name: Checkout repository
-        uses: https://code.forgejo.org/actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: https://code.forgejo.org/actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Run integration tests
         run: npm run test:integration
 
-      # - name: Upload integration test results
-      #   uses: https://code.forgejo.org/actions/upload-artifact@v4
-      #   if: always()
-      #   with:
-      #     name: integration-test-results
-      #     path: test-results/
-
   build:
     runs-on: codeberg-medium
-    needs: [unit-tests, integration-tests]
+    needs: tests
 
     steps:
       - name: Checkout repository
