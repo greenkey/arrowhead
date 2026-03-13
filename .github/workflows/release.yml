@@ -15,13 +15,17 @@ jobs:
       - name: Check if manifest.json was modified
         id: check-manifest
         run: |
+          echo "Checking manifest.json modification..."
           CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          echo "Changed files: $CHANGED_FILES"
           if echo "$CHANGED_FILES" | grep -q "manifest.json"; then
             echo "version_bump=true" >> $GITHUB_OUTPUT
             VERSION=$(jq -r '.version' manifest.json)
             echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Detected version bump to $VERSION"
           else
             echo "version_bump=false" >> $GITHUB_OUTPUT
+            echo "No version bump detected"
           fi
 
   create-release:
