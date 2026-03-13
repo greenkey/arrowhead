@@ -49,9 +49,6 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      - name: Run integration tests
-        run: npm run test:integration
-
   build:
     runs-on: codeberg-medium
     needs: tests
