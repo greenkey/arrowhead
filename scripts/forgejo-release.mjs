@@ -69,8 +69,6 @@ async function createForgejoRelease() {
   };
 
   try {
-    const { default: fetch } = await import('node-fetch');
-    
     const createResponse = await fetch(createReleaseUrl, {
       method: 'POST',
       headers: {
