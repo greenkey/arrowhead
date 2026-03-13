@@ -1,6 +1,6 @@
 {
   "name": "arrowhead-obsidian-plugin",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Convert your Obsidian vault to a complete static website with customizable themes and export options.",
   "main": "main.js",
   "type": "module",
