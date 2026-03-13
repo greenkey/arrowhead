@@ -14,8 +14,6 @@ build/
 .eslintcache
 *.tsbuildinfo
 main.js
-manifest.json
-versions.json
 styles.css
 !src/**/*.js
 !src/**/*.d.ts
