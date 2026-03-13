@@ -13,7 +13,6 @@
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "release": "npm run build && zip -r release.zip main.js manifest.json styles.css",
-    "release:forgejo": "node scripts/forgejo-release.mjs",
     "release:prepare": "node scripts/release-prepare.mjs",
     "release:commit": "node scripts/release-commit.mjs",
     "deploy": "node scripts/deploy.mjs",

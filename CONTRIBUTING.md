@@ -85,8 +85,7 @@ arrowhead-obsidian-plugin/
 ├── test-data/             ← Test vault structure
 ├── docs/                  ← Documentation
 ├── scripts/               ← Build and release scripts
-├── .forgejo/workflows/    ← Forgejo CI/CD
-├── .github/workflows/     ← GitHub CI/CD (mirrored)
+├── .github/workflows/     ← GitHub CI/CD
 ├── esbuild.config.mjs     ← Build configuration
 ├── tsconfig.json          ← TypeScript config
 └── vitest.config.ts       ← Test configuration
