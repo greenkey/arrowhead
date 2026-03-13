@@ -20,7 +20,7 @@ async function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
     const tester = http.createServer();
     tester.on('error', () => {
-      try { tester.close(); } catch {}
+      try { tester.close(); } catch { /* ignore */ }
       resolve(false);
     });
     tester.on('listening', () => {
@@ -28,7 +28,7 @@ async function isPortAvailable(port: number): Promise<boolean> {
     });
     tester.listen(port, '0.0.0.0');
     setTimeout(() => {
-      try { tester.close(); } catch {}
+      try { tester.close(); } catch { /* ignore */ }
       resolve(false);
     }, 100);
   });
@@ -179,7 +179,7 @@ export async function stopServer(): Promise<void> {
           try {
             (serverRef as any).closeAllConnections?.();
             serverRef.unref();
-          } catch (e) {}
+          } catch (e) { /* ignore */ }
           server = null;
           currentPort = 0;
           currentOutputDir = "";

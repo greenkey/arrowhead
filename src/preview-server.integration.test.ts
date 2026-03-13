@@ -151,8 +151,7 @@ describe('PreviewServer Integration Tests', () => {
 
       try {
         await startServer(outputPath, 65530);
-      } catch {
-      }
+      } catch { /* ignore */ }
     });
   });
 

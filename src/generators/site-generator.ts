@@ -353,7 +353,7 @@ private pathToUrl(path: string): string {
         const date = dateStr.split("T")[0] || "";
         const tags = file.tags || [];
         const contentWithoutFrontmatter = this.removeFrontmatter(file.content);
-        const excerpt = contentWithoutFrontmatter.substring(0, 150).replace(/[#*`\[\]]/g, "").trim();
+        const excerpt = contentWithoutFrontmatter.substring(0, 150).replace(/[#*`[\]]/g, "").trim();
         
         return { title, url, date, tags, excerpt };
       });
@@ -367,7 +367,7 @@ private pathToUrl(path: string): string {
         return { title, url };
       });
     
-    let template = await this.loadIndexTemplate("default");
+    const template = await this.loadIndexTemplate("default");
     
     const templateData: TemplateData = {
       title: this.plugin.settings.siteTitle,

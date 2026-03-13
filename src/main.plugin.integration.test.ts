@@ -22,8 +22,7 @@ describe('Main Plugin Integration Tests', () => {
   afterEach(() => {
     try {
       fs.rmSync(tmpDir, { recursive: true, force: true });
-    } catch {
-    }
+    } catch { /* ignore */ }
   });
 
   describe('Settings Management', () => {

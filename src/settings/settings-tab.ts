@@ -58,7 +58,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       cls: "setting-description"
     });
 
-    let resolvedPathDisplay: HTMLElement;
+    let resolvedPathDisplay: HTMLElement; // eslint-disable-line prefer-const
 
     const vaultPath = this.plugin.getVaultRootPath();
 
