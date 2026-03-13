@@ -11,12 +11,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check if manifest.json was modified
         id: check-manifest
         run: |
           echo "Checking manifest.json modification..."
-          CHANGED_FILES=$(git log -1 --name-only --format="")
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
           echo "Changed files: $CHANGED_FILES"
           if echo "$CHANGED_FILES" | grep -q "manifest.json"; then
             echo "version_bump=true" >> $GITHUB_OUTPUT
