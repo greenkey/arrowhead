@@ -11,23 +11,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Check if manifest.json was modified
         id: check-manifest
         run: |
-          echo "Checking manifest.json modification..."
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
-          echo "Changed files: $CHANGED_FILES"
-          if echo "$CHANGED_FILES" | grep -q "manifest.json"; then
+          echo "Checking for version bump..."
+          CURRENT_VERSION=$(jq -r '.version' manifest.json)
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Get the latest tag, or default to v0.0.0 if no tags exist
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+          
+          # Compare version with tag (remove 'v' prefix from tag if present)
+          TAG_VERSION=${LATEST_TAG#v}
+          
+          if [ "v$CURRENT_VERSION" != "$LATEST_TAG" ]; then
             echo "version_bump=true" >> $GITHUB_OUTPUT
-            VERSION=$(jq -r '.version' manifest.json)
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "Detected version bump to $VERSION"
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "Detected version bump to $CURRENT_VERSION"
           else
             echo "version_bump=false" >> $GITHUB_OUTPUT
-            echo "No version bump detected"
+            echo "No version bump detected (current version matches latest tag)"
           fi
 
   create-release:
