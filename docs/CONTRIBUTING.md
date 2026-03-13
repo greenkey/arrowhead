@@ -111,6 +111,27 @@ npm run test:integration
 npm run test:ui
 ```
 
+## Running CI/CD Locally
+
+The project uses GitHub Actions for CI/CD. You can run the full workflow locally using [act](https://github.com/nektos/act):
+
+```bash
+# Run all CI jobs locally
+./scripts/run-act.sh
+
+# Run specific jobs
+./scripts/run-act.sh -j lint-and-typecheck
+./scripts/run-act.sh -j unit-tests
+./scripts/run-act.sh -j build
+```
+
+The script:
+1. Temporarily converts Forgejo Actions syntax to GitHub Actions format
+2. Runs the CI/CD workflow using act
+3. Restores the original Forgejo workflow file on exit (even if the script fails)
+
+Note: Requires [act](https://github.com/nektos/act) to be installed (`brew install act` on macOS).
+
 ## Submitting Changes
 
 1. Fork the repository
