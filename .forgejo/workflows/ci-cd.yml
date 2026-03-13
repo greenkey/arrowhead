@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [master, main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [master, main, develop]
+    branches: [master, develop]
 
 jobs:
   lint-and-typecheck:
@@ -49,12 +49,12 @@ jobs:
       - name: Run unit tests
         run: npm run test
 
-      - name: Upload test results
-        uses: https://code.forgejo.org/actions/upload-artifact@v4
-        if: always()
-        with:
-          name: unit-test-results
-          path: test-results/
+      # - name: Upload test results
+      #   uses: https://code.forgejo.org/actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: unit-test-results
+      #     path: test-results/
 
   integration-tests:
     runs-on: codeberg-small
@@ -76,12 +76,12 @@ jobs:
       - name: Run integration tests
         run: npm run test:integration
 
-      - name: Upload integration test results
-        uses: https://code.forgejo.org/actions/upload-artifact@v4
-        if: always()
-        with:
-          name: integration-test-results
-          path: test-results/
+      # - name: Upload integration test results
+      #   uses: https://code.forgejo.org/actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: integration-test-results
+      #     path: test-results/
 
   build:
     runs-on: codeberg-medium
