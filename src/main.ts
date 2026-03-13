@@ -58,11 +58,6 @@ export default class ArrowheadPlugin extends Plugin {
     this.addSettingTab(new ArrowheadSettingTab(this.app, this));
 
     this.registerVaultEvents();
-
-    const manifest = this.manifest || { version: "unknown" };
-    console.log(`Arrowhead Static Site Generator v${manifest.version} loaded successfully`);
-    console.log(`[Arrowhead] Vault: ${this.app.vault.getName()}`);
-    console.log(`[Arrowhead] Vault root: ${this.getVaultRootPath()}`);
   }
 
   public updateLiveModeIcon(): void {
@@ -141,7 +136,6 @@ export default class ArrowheadPlugin extends Plugin {
 
   onunload() {
     stopServer();
-    console.log("Arrowhead Static Site Generator unloaded");
   }
 
   async loadSettings() {
@@ -162,11 +156,7 @@ export default class ArrowheadPlugin extends Plugin {
       return;
     }
 
-    console.log("[generateSite] Starting site generation");
-    console.log(`[generateSite] Current outputDirectory setting: "${this.settings.outputDirectory}"`);
-
     const validation = await this.fileExporter.validateOutputPath();
-    console.log(`[generateSite] Validation result: ${JSON.stringify(validation)}`);
 
     if (!validation.valid) {
       new Notice(`Invalid output path: ${validation.error}`);
@@ -182,14 +172,9 @@ export default class ArrowheadPlugin extends Plugin {
       const outputPath = await this.fileExporter.getAbsoluteOutputPath();
       const relativeOutputPath = this.fileExporter.getRelativeOutputPath();
 
-      console.log(`[generateSite] Absolute path (for display): ${outputPath}`);
-      console.log(`[generateSite] Relative path (for adapter): "${relativeOutputPath}"`);
-
       const siteData = await this.vaultWalker.collectVaultData();
-      console.log(`[generateSite] Collected ${siteData.files.length} files from vault`);
 
       await this.siteGenerator.generate(siteData, relativeOutputPath);
-      console.log("[generateSite] After siteGenerator.generate");
 
       if (!isAutoRegenerate) {
         new Notice(`Static site is synced on ${outputPath}`);
@@ -212,8 +197,6 @@ export default class ArrowheadPlugin extends Plugin {
   private registerVaultEvents(): void {
     this.registerEvent(this.app.vault.on("modify", async (file) => {
       if (this.settings.autoRegenerate && isServerRunning() && file.name.endsWith(".md")) {
-        console.log(`File modified: ${file.path}, auto-regenerating...`);
-        
         if (this.debounceTimer) {
           clearTimeout(this.debounceTimer);
         }
@@ -225,11 +208,9 @@ export default class ArrowheadPlugin extends Plugin {
     }));
 
     this.registerEvent(this.app.vault.on("delete", (file) => {
-      console.log(`File deleted: ${file.path}`);
     }));
 
     this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
-      console.log(`File renamed: ${oldPath} -> ${file.path}`);
     }));
   }
 
@@ -244,7 +225,6 @@ export default class ArrowheadPlugin extends Plugin {
       return adapter;
     }
 
-    console.log("[getAdapter] Adapter is not FileSystemAdapter, attempting to use as-is");
     return adapter as unknown as FileSystemAdapter;
   }
 
@@ -257,24 +237,16 @@ export default class ArrowheadPlugin extends Plugin {
     const basePath = adapter.getBasePath();
     const vaultName = this.app.vault.getName();
 
-    console.log(`[getVaultRootPath] basePath from adapter: "${basePath}"`);
-    console.log(`[getVaultRootPath] vault name: "${vaultName}"`);
-
     if (basePath.endsWith(vaultName)) {
-      console.log(`[getVaultRootPath] ✓ basePath ends with vaultName, returning as-is`);
       return basePath;
     }
 
     const potentialPath = `${basePath}/${vaultName}`;
-    console.log(`[getVaultRootPath] ✗ basePath doesn't end with vaultName`);
-    console.log(`[getVaultRootPath] Computed path: ${potentialPath}`);
 
     if (basePath === "/") {
-      console.log(`[getVaultRootPath] basePath is root, returning vaultName directly`);
       return vaultName;
     }
 
-    console.log(`[getVaultRootPath] Returning computed path: ${potentialPath}`);
     return potentialPath;
   }
 }

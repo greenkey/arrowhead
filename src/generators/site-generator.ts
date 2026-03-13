@@ -15,10 +15,6 @@ export class SiteGenerator {
   }
 
   async generate(vaultData: VaultData, outputPath: string): Promise<void> {
-    console.log("[SiteGenerator.generate] Starting site generation...");
-    console.log(`[SiteGenerator.generate] Files to process: ${vaultData.files.length}`);
-    console.log(`[SiteGenerator.generate] Output path (should be vault-relative): "${outputPath}"`);
-
     await this.ensureBaseDirectory(outputPath);
 
     await this.clearOutputDirectory(outputPath);
@@ -45,7 +41,6 @@ export class SiteGenerator {
     }
 
     const elapsed = Date.now() - startTime;
-    console.log(`Site generation completed in ${elapsed}ms`);
   }
 
   private removeFrontmatter(content: string): string {
@@ -82,8 +77,6 @@ export class SiteGenerator {
 
     const fullPath = `${outputPath}/${outputFilePath}`;
     await this.writeFile(fullPath, html);
-
-    console.log(`Generated: ${outputFilePath}`);
   }
 
   private processMarkdown(content: string): string {
@@ -329,13 +322,9 @@ private pathToUrl(path: string): string {
 
     await this.ensureDirectory(outputPath, "index.html");
     await this.writeFile(indexPath, html);
-    console.log("Generated index/sitemap");
   }
 
   private async generateIndexPage(vaultData: VaultData, outputPath: string): Promise<void> {
-    console.log("Generating main index.html page");
-    console.log(`[generateIndexPage] Number of files: ${vaultData.files.length}`);
-    
     const posts = vaultData.files
       .filter(file => file.pageType === 'post')
       .sort((a, b) => {
@@ -385,7 +374,6 @@ private pathToUrl(path: string): string {
     const indexPath = `${outputPath}/index.html`;
     await this.ensureDirectory(outputPath, "index.html");
     await this.writeFile(indexPath, html);
-    console.log(`Generated index.html with ${posts.length} posts and ${pages.length} pages`);
   }
 
   private async loadIndexTemplate(templateName: string): Promise<string> {
@@ -397,7 +385,7 @@ private pathToUrl(path: string): string {
         return await this.plugin.app.vault.cachedRead(file as any);
       }
     } catch (error) {
-      console.log(`Custom index template not found: ${indexTemplatePath}`);
+      // Custom template not found, use default
     }
     
     return this.getDefaultIndexTemplate();
@@ -486,7 +474,6 @@ ${pages}
     
     await this.ensureDirectory(outputPath, "sitemap.xml");
     await this.writeFile(`${outputPath}/sitemap.xml`, sitemap);
-    console.log("Generated sitemap.xml");
   }
 
   private async generateRobotsTxt(outputPath: string): Promise<void> {
@@ -497,7 +484,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     
     await this.ensureDirectory(outputPath, "robots.txt");
     await this.writeFile(`${outputPath}/robots.txt`, robotsTxt);
-    console.log("Generated robots.txt");
   }
 
   private async copyAttachments(attachments: VaultFile[], outputPath: string): Promise<void> {
@@ -519,15 +505,11 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
         console.warn(`Failed to copy attachment: ${attachment.path}`);
       }
     }
-    
-    console.log(`Copied ${attachments.length} attachments`);
   }
 
   private async clearOutputDirectory(outputPath: string): Promise<void> {
     const vaultRoot = this.plugin.getVaultRootPath();
     const isOutsideVault = isAbsolutePath(outputPath) && !outputPath.startsWith(vaultRoot);
-
-    console.log(`[clearOutputDirectory] Clearing: ${outputPath}, outsideVault: ${isOutsideVault}`);
 
     try {
       if (isOutsideVault) {
@@ -541,7 +523,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
               fs.unlinkSync(filePath);
             }
           }
-          console.log("[clearOutputDirectory] Cleared with fs");
         }
       } else {
         const adapter = this.plugin.app.vault.adapter;
@@ -554,7 +535,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
           for (const folder of entries.folders) {
             await this.removeDirectoryRecursive(folder);
           }
-          console.log("[clearOutputDirectory] Cleared with adapter");
         }
       }
     } catch (error) {
@@ -578,40 +558,26 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
   }
 
   private async ensureBaseDirectory(outputPath: string): Promise<void> {
-    console.log(`[ensureBaseDirectory] Ensuring directory: "${outputPath}"`);
     try {
       const adapter = this.plugin.app.vault.adapter;
       const vaultRoot = this.plugin.getVaultRootPath();
       const isOutsideVault = isAbsolutePath(outputPath) && !outputPath.startsWith(vaultRoot);
-
-      console.log(`[ensureBaseDirectory] Checking if directory exists...`);
       
       if (isOutsideVault) {
-        console.log(`[ensureBaseDirectory] Using Node.js fs for external directory`);
         const exists = fs.existsSync(outputPath);
-        console.log(`[ensureBaseDirectory] Directory exists: ${exists}`);
 
         if (!exists) {
-          console.log(`[ensureBaseDirectory] Creating directory with fs.mkdirSync...`);
           fs.mkdirSync(outputPath, { recursive: true });
 
           const verifyExists = fs.existsSync(outputPath);
-          console.log(`[ensureBaseDirectory] After mkdir, directory exists: ${verifyExists}`);
-        } else {
-          console.log(`[ensureBaseDirectory] Directory already exists`);
         }
       } else {
         const exists = await adapter.exists(outputPath);
-        console.log(`[ensureBaseDirectory] Directory exists: ${exists}`);
 
         if (!exists) {
-          console.log(`[ensureBaseDirectory] Creating directory...`);
           await adapter.mkdir(outputPath);
 
           const verifyExists = await adapter.exists(outputPath);
-          console.log(`[ensureBaseDirectory] After mkdir, directory exists: ${verifyExists}`);
-        } else {
-          console.log(`[ensureBaseDirectory] Directory already exists`);
         }
       }
     } catch (error) {
@@ -628,8 +594,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
 
     const dirPart = relativePath.substring(0, lastSlashIndex);
     const fullPath = basePath ? `${basePath}/${dirPart}` : dirPart;
-
-    console.log(`[ensureDirectory] Creating directory: "${fullPath}"`);
 
     if (!fullPath.endsWith(".html") && !fullPath.endsWith(".xml") && !fullPath.endsWith(".txt") && !fullPath.endsWith(".css") && !fullPath.endsWith(".js")) {
       const vaultRoot = this.plugin.getVaultRootPath();
@@ -651,7 +615,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
 
   private async writeFile(filePath: string, content: string): Promise<void> {
     const normalizedPath = filePath.replace(/\/+/g, "/");
-    console.log(`[writeFile] Writing: ${normalizedPath} (${content.length} bytes)`);
     
     const vaultRoot = this.plugin.getVaultRootPath();
     const isOutsideVault = isAbsolutePath(normalizedPath) && !normalizedPath.startsWith(vaultRoot);
@@ -660,7 +623,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
       if (isOutsideVault) {
         fs.writeFileSync(normalizedPath, content, "utf-8");
         const exists = fs.existsSync(normalizedPath);
-        console.log(`[writeFile] Success (fs). File exists: ${exists}`);
         if (!exists) {
           console.warn(`[writeFile] Write reported success but file doesn't exist`);
         }
@@ -668,7 +630,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
         await this.plugin.app.vault.adapter.write(normalizedPath, content);
 
         const exists = await this.plugin.app.vault.adapter.exists(normalizedPath);
-        console.log(`[writeFile] Success (adapter). File exists on adapter: ${exists}`);
 
         if (!exists) {
           console.warn(`[writeFile] Write reported success but file doesn't exist in adapter`);
@@ -692,7 +653,6 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
       const cssContent = this.templateEngine.getDefaultCss();
       const targetPath = `${assetsPath}/${cssFileName}`;
       fs.writeFileSync(targetPath, cssContent, "utf-8");
-      console.log(`[copyTemplateAssets] Copied CSS to ${targetPath}`);
     } catch (error) {
       console.warn(`[copyTemplateAssets] Failed to copy template CSS:`, error);
     }
