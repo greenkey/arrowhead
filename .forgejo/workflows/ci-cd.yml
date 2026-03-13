@@ -108,6 +108,14 @@ jobs:
             echo "modified=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Configure git authentication
+        if: steps.check-manifest.outputs.modified == 'true'
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.FORGEJO_TOKEN }}@codeberg.org/".insteadOf "ssh://git@codeberg.org/"
+          git config --global url."https://codeberg.org/".insteadOf "ssh://git@codeberg.org/"
+        env:
+          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+
       - name: Create and push tag
         if: steps.check-manifest.outputs.modified == 'true'
         run: |
