@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     tags:
-      - 'v*'
+      - '*'
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 24
         cache: 'npm'
         
     - name: Extract tag and version
@@ -35,10 +35,10 @@ jobs:
       # Extract version from manifest.json
       run: |
         VERSION=$(jq -r '.version' manifest.json)
-        TAG_VERSION=${GITHUB_REF_NAME#v}
+        TAG_VERSION=$GITHUB_REF_NAME
         echo "Manifest Version: $VERSION"
-        echo "Tag Version (without v): $TAG_VERSION"
-        if [ "$VERSION" != "$TAG_VERSION" ] && [ "$VERSION" != "v$TAG_VERSION" ]; then
+        echo "Tag Version: $TAG_VERSION"
+        if [ "$VERSION" != "$TAG_VERSION" ]; then
           echo "Error: Tag version ($GITHUB_REF_NAME) doesn't match manifest version ($VERSION)"
           exit 1
         fi
@@ -63,9 +63,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Get version without 'v' prefix for semver
+        # Get version
         VERSION=$(git describe --tags --abbrev=0)
-        VERSION_NUM=${VERSION#v}
         PLUGIN_NAME=$(jq -r '.id' manifest.json)
         RELEASE_FILE="${{ github.event.repository.name }}-${VERSION}.zip"
         
