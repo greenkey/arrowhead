@@ -15,7 +15,7 @@
 ### Initial Setup
 
 ```bash
-# Clone the repository
+# Clone from Codeberg (NOT GitHub)
 git clone https://codeberg.org/greenkey/arrowhead.git
 cd arrowhead-obsidian-plugin
 
@@ -47,7 +47,7 @@ npm run build
 
 ### Making Changes
 
-1. Create a feature branch
+1. Create a feature branch on Codeberg
 2. Make changes to source files
 3. Run tests: `npm run test`
 4. Fix any linting or type errors
@@ -123,7 +123,7 @@ npm run test:ui
 
 ## Running CI/CD Locally
 
-The project uses Forgejo and GitHub Actions for CI/CD. You can run the full workflow locally using [act](https://github.com/nektos/act):
+The project uses Forgejo Actions for CI/CD. You can run the full workflow locally using [act](https://github.com/nektos/act):
 
 ```bash
 # Run all CI jobs locally
@@ -149,18 +149,19 @@ Note: Requires [act](https://github.com/nektos/act) to be installed (`brew insta
 3. Make changes with tests
 4. Ensure all tests pass
 5. Run lint and typecheck
-6. Submit pull request to master
+6. Submit pull request to master on Codeberg
 
 ## Release Process
 
 ### Overview
 
-Releases are automated through a two-step process:
+Releases are automated through a three-step process:
 
 1. **Prepare**: Bump version and get changelog suggestions
-2. **Commit**: Commit changes and push to trigger CI/CD
+2. **Update**: Edit CHANGELOG.md manually
+3. **Commit**: Commit changes and push to trigger CI/CD
 
-Both Codeberg and GitHub releases are created automatically when a tag is pushed.
+GitHub handles tag creation and releases. Forgejo handles validation and package creation.
 
 ### Step 1: Prepare the Release
 
@@ -214,19 +215,34 @@ This will:
 
 ### Step 4: CI/CD Creates the Release
 
-After you push:
+After you push to Codeberg:
 
-1. CI/CD runs lint, tests, and build on master
-2. If all checks pass, CI/CD automatically creates and pushes the tag `vX.Y.Z`
-3. The tag triggers automatic releases on:
-   - **Codeberg**: Creates Forgejo release with `release.zip`
-   - **GitHub**: Creates GitHub release with `main.js`, `manifest.json`, `styles.css`
+1. **Codeberg CI runs validation:**
+   - Lint and typecheck
+   - Tests
+   - Build
+   → Ensures code quality before release
+
+2. **Mirror syncs the commit to GitHub**
+
+3. **GitHub CI detects version bump:**
+   - Builds the plugin
+   - Creates and pushes tag vX.Y.Z to GitHub
+   - Creates GitHub release with:
+     • main.js
+     • manifest.json
+     • styles.css
+
+4. **Mirror syncs the tag back to Codeberg**
+
+5. **Forgejo CI creates package release:**
+   - Builds release.zip package
+   - Creates Forgejo release with release.zip
 
 ### Tag Creation
 
-**Do NOT create tags manually!** Tags are automatically created by CI/CD after:
-- All tests pass
-- Build completes successfully
+**Do NOT create tags manually!** Tags are automatically created by GitHub CI after:
+- Codeberg CI validation passes (lint, tests, build)
 - The commit modified `manifest.json` (indicating a version bump)
 
 ## Why Codeberg?

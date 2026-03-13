@@ -78,58 +78,6 @@ jobs:
             manifest.json
             styles.css
 
-  create-tag:
-    runs-on: codeberg-small
-    needs: build
-    if: forgejo.ref == 'refs/heads/master'
-
-    steps:
-      - name: Checkout repository
-        uses: https://code.forgejo.org/actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: https://code.forgejo.org/actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check if manifest.json was modified
-        id: check-manifest
-        run: |
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
-          if echo "$CHANGED_FILES" | grep -q "manifest.json"; then
-            echo "modified=true" >> $GITHUB_OUTPUT
-            VERSION=$(jq -r '.version' manifest.json)
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "modified=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Configure git authentication
-        if: steps.check-manifest.outputs.modified == 'true'
-        run: |
-          git config --global url."https://x-access-token:${{ secrets.FORGEJO_TOKEN }}@codeberg.org/".insteadOf "ssh://git@codeberg.org/"
-          git config --global url."https://codeberg.org/".insteadOf "ssh://git@codeberg.org/"
-        env:
-          FORGEJO_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
-
-      - name: Create and push tag
-        if: steps.check-manifest.outputs.modified == 'true'
-        run: |
-          VERSION=${{ steps.check-manifest.outputs.version }}
-          TAG_NAME="v$VERSION"
-          echo "Creating tag: $TAG_NAME"
-          git tag "$TAG_NAME"
-          git push origin "$TAG_NAME"
-        env:
-          GIT_AUTHOR_NAME: Forgejo CI
-          GIT_AUTHOR_EMAIL: ci@codeberg.org
-          GIT_COMMITTER_NAME: Forgejo CI
-          GIT_COMMITTER_EMAIL: ci@codeberg.org
-
   create-release:
     runs-on: codeberg-small
     needs: build
@@ -157,7 +105,7 @@ jobs:
       - name: Create Release
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
-          
+
           # Create release using Forgejo API
           RESPONSE=$(curl -X POST "${{ env.FORGEJO_API_URL }}/api/v1/repos/${{ env.FORGEJO_REPO }}/releases" \
             -H "Authorization: token ${{ env.FORGEJO_TOKEN }}" \
@@ -169,10 +117,10 @@ jobs:
               "draft": false,
               "prerelease": false
             }')
-          
+
           # Extract release ID from response
           RELEASE_ID=$(echo $RESPONSE | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
-          
+
           # Upload release asset
           curl -X POST "${{ env.FORGEJO_API_URL }}/api/v1/repos/${{ env.FORGEJO_REPO }}/releases/$RELEASE_ID/assets" \
             -H "Authorization: token ${{ env.FORGEJO_TOKEN }}" \

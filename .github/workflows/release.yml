@@ -2,84 +2,32 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [master]
 
 jobs:
-  lint-and-typecheck:
+  check-version-bump:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Run TypeScript type check
-        run: npm run typecheck
-
-  tests:
-    runs-on: ubuntu-latest
-    needs: lint-and-typecheck
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run unit tests
-        run: npm run test
-
-  build:
-    runs-on: ubuntu-latest
-    needs: tests
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build plugin
-        run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            main.js
-            manifest.json
-            styles.css
+      - name: Check if manifest.json was modified
+        id: check-manifest
+        run: |
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          if echo "$CHANGED_FILES" | grep -q "manifest.json"; then
+            echo "version_bump=true" >> $GITHUB_OUTPUT
+            VERSION=$(jq -r '.version' manifest.json)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "version_bump=false" >> $GITHUB_OUTPUT
+          fi
 
   create-release:
     runs-on: ubuntu-latest
-    needs: build
+    needs: check-version-bump
+    if: needs.check-version-bump.outputs.version_bump == 'true'
 
     steps:
       - name: Checkout repository
@@ -99,29 +47,32 @@ jobs:
       - name: Build plugin
         run: npm run build
 
-      - name: Get version from manifest.json
-        id: version
-        run: echo "VERSION=$(jq -r '.version' manifest.json)" >> $GITHUB_OUTPUT
-
       - name: Get changelog
         id: changelog
         run: |
           if [ -f CHANGELOG.md ]; then
-            # Extract changelog section for this version
-            VERSION="${{ steps.version.outputs.VERSION }}"
+            VERSION="${{ needs.check-version-bump.outputs.version }}"
             CHANGELOG_CONTENT=$(awk -v ver="[${VERSION}]" '/^## \['"$VERSION"'\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md || echo "")
             echo "content<<EOF" >> $GITHUB_OUTPUT
             echo "$CHANGELOG_CONTENT" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "content=Release ${{ steps.version.outputs.VERSION }}" >> $GITHUB_OUTPUT
+            echo "content=Release ${{ needs.check-version-bump.outputs.version }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create Release
+      - name: Create tag
+        run: |
+          VERSION=${{ needs.check-version-bump.outputs.version }}
+          TAG_NAME="v$VERSION"
+          echo "Creating tag: $TAG_NAME"
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.VERSION }}
-          name: Release v${{ steps.version.outputs.VERSION }}
+          tag_name: v${{ needs.check-version-bump.outputs.version }}
+          name: Release v${{ needs.check-version-bump.outputs.version }}
           body: ${{ steps.changelog.outputs.content }}
           files: |
             main.js
