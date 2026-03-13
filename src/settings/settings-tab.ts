@@ -29,19 +29,19 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createSiteSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Site Information" });
+    containerEl.createEl("h2", { text: "Site information" });
     containerEl.createEl("p", { 
       text: "Basic information about your static site", 
       cls: "setting-description" 
     });
 
     new Setting(containerEl)
-      .setName("Site Title")
+      .setName("Site title")
       .setDesc("The title displayed in the site header and browser title bar")
       .addText(text => this.createTextSetting(text, "siteTitle"));
 
     new Setting(containerEl)
-      .setName("Site Description")
+      .setName("Site description")
       .setDesc("A brief description of your site, used in meta tags")
       .addText(text => this.createTextSetting(text, "siteDescription"));
 
@@ -52,20 +52,21 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createOutputSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Output Settings" });
+    containerEl.createEl("h2", { text: "Output settings" });
     containerEl.createEl("p", {
       text: "Configure where and how your site is generated",
       cls: "setting-description"
     });
 
-    let resolvedPathDisplay: HTMLElement; // eslint-disable-line prefer-const
-
     const vaultPath = this.plugin.getVaultRootPath();
 
+    // eslint-disable-next-line prefer-const
     let outputTextComponent: TextComponent | null = null;
+    // eslint-disable-next-line prefer-const
+    let resolvedPathDisplay: HTMLElement;
 
     new Setting(containerEl)
-      .setName("Output Directory")
+      .setName("Output directory")
       .setDesc("Directory where generated files will be placed (absolute path or relative to vault root)")
       .addText(text => {
         outputTextComponent = text;
@@ -109,49 +110,47 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createGenerationSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Generation Options" });
+    containerEl.createEl("h2", { text: "Generation options" });
     containerEl.createEl("p", { 
       text: "Configure what content and features are included", 
       cls: "setting-description" 
     });
 
     new Setting(containerEl)
-      .setName("Include Attachments")
+      .setName("Include attachments")
       .setDesc("Copy images and other attachments to the output directory")
       .addToggle(toggle => this.createToggleSetting(toggle, "includeAttachments"));
 
     new Setting(containerEl)
-      .setName("Generate Sitemap")
+      .setName("Generate sitemap")
       .setDesc("Create sitemap.xml for search engines")
       .addToggle(toggle => this.createToggleSetting(toggle, "generateSitemap"));
 
     new Setting(containerEl)
-      .setName("Generate Robots.txt")
+      .setName("Generate robots.txt")
       .setDesc("Create robots.txt for search engine crawling")
       .addToggle(toggle => this.createToggleSetting(toggle, "generateRobotsTxt"));
 
     new Setting(containerEl)
-      .setName("Process Wiki Links")
+      .setName("Process wiki links")
       .setDesc("Convert [[Wiki Links]] to HTML links")
       .addToggle(toggle => this.createToggleSetting(toggle, "processWikilinks"));
 
     new Setting(containerEl)
-      .setName("Process Embeds")
+      .setName("Process embeds")
       .setDesc("Handle [[Image]] and other embeds")
       .addToggle(toggle => this.createToggleSetting(toggle, "processEmbeds"));
-
-    this.createContentSettings(containerEl);
   }
 
   private createContentSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Content Organization" });
+    containerEl.createEl("h2", { text: "Content organization" });
     containerEl.createEl("p", { 
       text: "Configure which folders contain posts and pages", 
       cls: "setting-description" 
     });
 
     new Setting(containerEl)
-      .setName("Posts Folder")
+      .setName("Posts folder")
       .setDesc("Folder containing blog posts/timeline entries (default: posts)")
       .addText(text => {
         text.setPlaceholder("posts");
@@ -163,7 +162,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Pages Folder")
+      .setName("Pages folder")
       .setDesc("Folder containing static pages like About, Contact (default: pages)")
       .addText(text => {
         text.setPlaceholder("pages");
@@ -176,14 +175,14 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createPreviewSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Preview Settings" });
+    containerEl.createEl("h2", { text: "Preview settings" });
     containerEl.createEl("p", { 
       text: "Configure the in-app preview functionality", 
       cls: "setting-description" 
     });
 
     new Setting(containerEl)
-      .setName("Preview Server Port")
+      .setName("Preview server port")
       .setDesc("Port for the local preview server (default: 3456)")
       .addText(text => {
         text.setPlaceholder("3456");
@@ -204,14 +203,14 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createAdvancedSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Advanced Settings" });
+    containerEl.createEl("h2", { text: "Advanced" });
     containerEl.createEl("p", { 
       text: "Fine-tune the generation process", 
       cls: "setting-description" 
     });
 
     new Setting(containerEl)
-      .setName("Ignored Folders")
+      .setName("Ignored folders")
       .setDesc("Comma-separated list of folders to exclude (e.g., _templates, .obsidian)")
       .addText(text => {
         text.setPlaceholder("folder1, folder2, folder3");
