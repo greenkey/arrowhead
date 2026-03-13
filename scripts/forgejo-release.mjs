@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
 
-const FORGEJO_API_URL = process.env.FORGEJO_API_URL || 'https://codeberg.org';
+const FORGEJO_API_URL = process.env.FORGEJO_API_URL || 'https://github.com';
 const REPO_OWNER = process.env.FORGEJO_REPO_OWNER || '';
 const REPO_NAME = process.env.FORGEJO_REPO_NAME || '';
 const TOKEN = process.env.FORGEJO_TOKEN || '';

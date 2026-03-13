@@ -96,7 +96,7 @@ async function main() {
     console.log('   • GitHub (mirrored release)');
     console.log('');
     console.log('⏳ Monitor CI/CD at:');
-    console.log('   • Codeberg: https://codeberg.org/greenkey/arrowhead/actions');
+    console.log('   • GitHub: https://github.com/greenkey/arrowhead/actions');
     console.log('');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
