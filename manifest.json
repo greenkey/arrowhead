@@ -6,6 +6,6 @@
   "description": "Convert your Obsidian vault to a complete static website with customizable themes and export options.",
   "author": "Arrowhead",
   "authorUrl": "https://github.com/greenkey/arrowhead",
-  "isDesktopOnly": false,
+  "isDesktopOnly": true,
   "overrides": {}
 }
