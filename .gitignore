@@ -13,8 +13,6 @@ build/
 *.sw?
 .eslintcache
 *.tsbuildinfo
-main.js
-styles.css
 !src/**/*.js
 !src/**/*.d.ts
 
