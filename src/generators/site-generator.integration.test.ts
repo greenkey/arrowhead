@@ -119,7 +119,7 @@ describe('SiteGenerator Integration Tests', () => {
   describe('HTML output generation', () => {
     it('should generate index.html with posts and pages', async () => {
       const mockPlugin = createMockPlugin(outputPath);
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -165,7 +165,7 @@ describe('SiteGenerator Integration Tests', () => {
 
     it('should generate individual HTML files for each page', async () => {
       const mockPlugin = createMockPlugin(outputPath);
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -196,7 +196,7 @@ describe('SiteGenerator Integration Tests', () => {
 
     it('should copy template CSS to output', async () => {
       const mockPlugin = createMockPlugin(outputPath);
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -229,7 +229,7 @@ describe('SiteGenerator Integration Tests', () => {
       mockPlugin.settings.generateSitemap = true;
       mockPlugin.settings.siteUrl = 'https://example.com';
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -263,7 +263,7 @@ describe('SiteGenerator Integration Tests', () => {
       mockPlugin.settings.generateRobotsTxt = true;
       mockPlugin.settings.siteUrl = 'https://example.com';
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([]);
 
@@ -279,7 +279,7 @@ describe('SiteGenerator Integration Tests', () => {
 
     it('should process markdown headers in content', async () => {
       const mockPlugin = createMockPlugin(outputPath);
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -323,7 +323,7 @@ title: Markdown Test
 
     it('should not add <br> tags between list items', async () => {
       const mockPlugin = createMockPlugin(outputPath);
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -383,7 +383,7 @@ Second line of text.
       mockPlugin.settings.generateSitemap = true;
       mockPlugin.settings.siteUrl = 'https://example.com';
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -430,7 +430,7 @@ Second line of text.
 
     it('should handle empty vault data gracefully', async () => {
       const mockPlugin = createMockPlugin(outputPath);
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([]);
 
@@ -446,7 +446,7 @@ Second line of text.
       const mockPlugin = createMockPlugin(outputPath);
       mockPlugin.settings.processWikilinks = true;
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -524,7 +524,7 @@ Get in touch with us.
       const mockPlugin = createMockPlugin(outputPath);
       mockPlugin.settings.processWikilinks = false;
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const vaultData = createVaultData([
         {
@@ -567,7 +567,7 @@ Also see [this cool project](https://github.com/anomalyco/arrowhead) on GitHub.
       const mockPlugin = createMockPlugin(outputPath);
       mockPlugin.settings.includeAttachments = true;
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const imagePath = 'images/photo.jpg';
       const sourceImagePath = path.join(vaultPath, imagePath);
@@ -621,7 +621,7 @@ title: Page with Image
       mockPlugin.settings.includeAttachments = true;
       mockPlugin.settings.processEmbeds = true;
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const imagePath = 'diagram.png';
       const vaultData = createVaultData([
@@ -676,7 +676,7 @@ See this diagram:
       const mockPlugin = createMockPlugin(outputPath);
       mockPlugin.settings.includeAttachments = true;
 
-      const generator = new SiteGenerator(mockPlugin as any);
+      const generator = new SiteGenerator(mockPlugin);
 
       const nestedImagePath = 'resources/screenshots/main-view.png';
       const sourceImagePath = path.join(vaultPath, nestedImagePath);

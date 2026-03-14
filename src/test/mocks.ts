@@ -18,44 +18,44 @@ export interface MockVaultFile extends MockFile {
 }
 
 export interface MockMetadataCache {
-  getFileCache: Mock<any>;
-  setCache: Mock<any>;
-  getFrontmatter: Mock<any>;
+  getFileCache: Mock<unknown>;
+  setCache: Mock<unknown>;
+  getFrontmatter: Mock<unknown>;
 }
 
 export interface MockVaultAdapter {
-  exists: Mock<any>;
-  mkdir: Mock<any>;
-  list: Mock<any>;
-  remove: Mock<any>;
-  write: Mock<any>;
-  read: Mock<any>;
-  copy: Mock<any>;
-  getBasePath: Mock<any>;
+  exists: Mock<unknown>;
+  mkdir: Mock<unknown>;
+  list: Mock<unknown>;
+  remove: Mock<unknown>;
+  write: Mock<unknown>;
+  read: Mock<unknown>;
+  copy: Mock<unknown>;
+  getBasePath: Mock<unknown>;
 }
 
 export interface MockVault {
-  getName: Mock<any>;
-  getMarkdownFiles: Mock<any>;
-  getFiles: Mock<any>;
-  cachedRead: Mock<any>;
-  read: Mock<any>;
+  getName: Mock<unknown>;
+  getMarkdownFiles: Mock<unknown>;
+  getFiles: Mock<unknown>;
+  cachedRead: Mock<unknown>;
+  read: Mock<unknown>;
   adapter: MockVaultAdapter;
-  create: Mock<any>;
-  modify: Mock<any>;
-  delete: Mock<any>;
-  rename: Mock<any>;
-  on: Mock<any>;
-  off: Mock<any>;
-  getAbstractFileByPath: Mock<any>;
+  create: Mock<unknown>;
+  modify: Mock<unknown>;
+  delete: Mock<unknown>;
+  rename: Mock<unknown>;
+  on: Mock<unknown>;
+  off: Mock<unknown>;
+  getAbstractFileByPath: Mock<unknown>;
 }
 
 export interface MockApp {
   vault: MockVault;
   metadataCache: MockMetadataCache;
   workspace: {
-    on: Mock<any>;
-    off: Mock<any>;
+    on: Mock<unknown>;
+    off: Mock<unknown>;
   };
 }
 
@@ -79,10 +79,10 @@ export interface MockPluginSettings {
 export interface MockPlugin {
   settings: MockPluginSettings;
   app: MockApp;
-  loadSettings: Mock<any>;
-  saveSettings: Mock<any>;
-  generateSite: Mock<any>;
-  getVaultRootPath: Mock<any>;
+  loadSettings: Mock<unknown>;
+  saveSettings: Mock<unknown>;
+  generateSite: Mock<unknown>;
+  getVaultRootPath: Mock<unknown>;
 }
 
 export function createMockVaultAdapter(): MockVaultAdapter {

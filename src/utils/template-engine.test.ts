@@ -3,7 +3,7 @@ import { TemplateEngine, TemplateData } from './template-engine';
 
 describe('TemplateEngine', () => {
   let engine: TemplateEngine;
-  let mockPlugin: any;
+  let mockPlugin: unknown;
 
   beforeEach(() => {
     mockPlugin = {

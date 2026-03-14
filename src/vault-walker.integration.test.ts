@@ -20,7 +20,7 @@ describe('VaultWalker Integration Tests', () => {
     fs.rmSync(tmpDir, { recursive: true });
   });
 
-  function createMockPluginWithFiles(files: TestVaultFile[]): any {
+  function createMockPluginWithFiles(files: TestVaultFile[]): unknown {
     const vault = createMockVaultWithTestFiles(files, vaultPath);
 
     const mockFiles = files.map(file =>

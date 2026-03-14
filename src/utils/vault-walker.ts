@@ -223,7 +223,7 @@ export class VaultWalker {
     }
     
     if (typeof frontmatter.tags === "string") {
-      tags.push(...(frontmatter.tags as string).split(",").map(t => t.trim()));
+      tags.push(...(frontmatter.tags).split(",").map(t => t.trim()));
     }
     
     const inlineTagRegex = /#[\w\u0600-\uFFFF-]+/g;
