@@ -1,11 +1,10 @@
 {
-  "id": "arrowhead-obsidian-plugin",
+  "id": "arrowhead",
   "name": "Arrowhead Static Site Generator",
   "version": "1.0.7",
   "minAppVersion": "1.5.0",
   "description": "Convert your Obsidian vault to a complete static website with customizable themes and export options.",
   "author": "Arrowhead",
-  "authorUrl": "https://github.com/greenkey/arrowhead",
-  "isDesktopOnly": true,
-  "overrides": {}
+  "authorUrl": "https://loman.it",
+  "isDesktopOnly": true
 }
