@@ -1,4 +1,4 @@
-import { vi, type Mocked, type Mock } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 export interface MockFile {
   path: string;

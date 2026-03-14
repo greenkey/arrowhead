@@ -39,7 +39,7 @@ export class ExportModal extends Modal {
     
     new Setting(contentEl)
       .addButton(btn => {
-        btn.setButtonText("Generate Site");
+        btn.setButtonText("Generate site");
         btn.setCta();
         btn.onClick(async () => {
           await this.runGeneration();

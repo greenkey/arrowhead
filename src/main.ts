@@ -139,7 +139,8 @@ export default class ArrowheadPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loaded = await this.loadData();
+    this.settings = { ...DEFAULT_SETTINGS, ...loaded } as typeof DEFAULT_SETTINGS;
     
     if (this.settings.siteTitle === DEFAULT_SETTINGS.siteTitle) {
       this.settings.siteTitle = this.app.vault.getName();

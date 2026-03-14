@@ -48,14 +48,14 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       .addText(text => this.createTextSetting(text, "siteDescription"));
 
     new Setting(containerEl)
-      .setName("Site URL")
-      .setDesc("The full URL where your site will be hosted (used for canonical URLs)")
+      .setName("Site url")
+      .setDesc("The full url where your site will be hosted (used for canonical urls)")
       .addText(text => this.createTextSetting(text, "siteUrl"));
   }
 
   private createOutputSettings(containerEl: HTMLElement): void {
     new Setting(containerEl)
-      .setName("Output settings")
+      .setName("Output")
       .setHeading();
     containerEl.createEl("p", {
       text: "Configure where and how your site is generated",
@@ -112,7 +112,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
   private createGenerationSettings(containerEl: HTMLElement): void {
     new Setting(containerEl)
-      .setName("Generation options")
+      .setName("Generation")
       .setHeading();
     containerEl.createEl("p", { 
       text: "Configure what content and features are included", 
@@ -136,12 +136,12 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Process wiki links")
-      .setDesc("Convert [[Wiki Links]] to HTML links")
+      .setDesc("Convert [[wiki links]] to HTML links")
       .addToggle(toggle => this.createToggleSetting(toggle, "processWikilinks"));
 
     new Setting(containerEl)
       .setName("Process embeds")
-      .setDesc("Handle [[Image]] and other embeds")
+      .setDesc("Handle [[image]] and other embeds")
       .addToggle(toggle => this.createToggleSetting(toggle, "processEmbeds"));
   }
 
@@ -181,7 +181,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
   private createPreviewSettings(containerEl: HTMLElement): void {
     new Setting(containerEl)
-      .setName("Preview settings")
+      .setName("Preview")
       .setHeading();
     containerEl.createEl("p", { 
       text: "Configure the in-app preview functionality", 
@@ -220,7 +220,7 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Ignored folders")
-      .setDesc("Comma-separated list of folders to exclude (e.g., _templates, .obsidian)")
+      .setDesc(`Comma-separated list of folders to exclude (e.g., _templates, ${this.plugin.app.vault.configDir})`)
       .addText(text => {
         text.setPlaceholder("folder1, folder2, folder3");
         text.setValue(this.plugin.settings.ignoredFolders.join(", "));

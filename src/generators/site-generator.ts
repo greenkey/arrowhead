@@ -26,8 +26,6 @@ export class SiteGenerator {
     await this.clearOutputDirectory(outputPath);
     this.copyTemplateAssets(outputPath);
 
-    const startTime = Date.now();
-
     for (const file of vaultData.files) {
       await this.generatePage(file, vaultData, outputPath);
     }
@@ -45,8 +43,6 @@ export class SiteGenerator {
     if (this.plugin.settings.includeAttachments) {
       await this.copyAttachments(vaultData.attachments, outputPath);
     }
-
-    const _elapsed = Date.now() - startTime;
   }
 
   private removeFrontmatter(content: string): string {
@@ -391,7 +387,7 @@ private pathToUrl(path: string): string {
       if (file && isTFile(file)) {
         return await this.plugin.app.vault.cachedRead(file);
       }
-    } catch (error) {
+    } catch {
       // Custom template not found, use default
     }
     
@@ -508,7 +504,7 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
         if (vaultFile) {
           await vault.adapter.copy(attachment.path, targetPath);
         }
-      } catch (error) {
+      } catch {
         console.warn(`Failed to copy attachment: ${attachment.path}`);
       }
     }
@@ -585,7 +581,7 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
       }
     } catch (error) {
       console.error(`[ensureBaseDirectory] Failed: "${outputPath}"`, error);
-      throw new Error(`Failed to create output directory: ${outputPath}. Error: ${error}`);
+      throw new Error(`Failed to create output directory: ${outputPath}. Error: ${String(error)}`);
     }
   }
 

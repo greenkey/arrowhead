@@ -1,5 +1,4 @@
 import ArrowheadPlugin from "../main";
-import { VaultData, VaultFile } from "./vault-walker";
 
 export class PathResolver {
   private plugin: ArrowheadPlugin;
