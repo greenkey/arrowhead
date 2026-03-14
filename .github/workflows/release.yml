@@ -35,11 +35,12 @@ jobs:
       # Extract version from manifest.json
       run: |
         VERSION=$(jq -r '.version' manifest.json)
-        TAG_VERSION=$GITHUB_REF_NAME
+        # Strip 'v' prefix from tag if present
+        TAG_VERSION=${GITHUB_REF_NAME#v}
         echo "Manifest Version: $VERSION"
         echo "Tag Version: $TAG_VERSION"
         if [ "$VERSION" != "$TAG_VERSION" ]; then
-          echo "Error: Tag version ($GITHUB_REF_NAME) doesn't match manifest version ($VERSION)"
+          echo "Error: Tag version ($TAG_VERSION) doesn't match manifest version ($VERSION)"
           exit 1
         fi
         
