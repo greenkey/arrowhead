@@ -8,7 +8,7 @@ Obsidian Plugin
      ├── main.ts          ← Plugin entry point, Obsidian lifecycle
      │
      ├── settings/        ← Configuration management
-     │    ├── settings.ts    ← Settings interface & defaults
+     │    ├── settings.ts    ← Settings interface & defaults (re-exports from path-utils)
      │    └── settings-tab.ts ← UI settings screen
      │
      ├── generators/      ← Core generation logic
@@ -19,7 +19,8 @@ Obsidian Plugin
      │
      ├── utils/           ← Utility functions
      │    ├── vault-walker.ts   ← Scans & categorizes vault files
-     │    ├── path-resolver.ts  ← Path validation & resolution
+     │    ├── path-utils.ts    ← Path validation, resolution, URL encoding
+     │    ├── markdown-processor.ts ← Unified markdown processing (wikilinks, embeds, syntax)
      │    ├── template-engine.ts← Template processing
      │    └── preview-server.ts ← HTTP server for preview
      │

@@ -1,6 +1,5 @@
 import type ArrowheadPlugin from "../main";
-import { isAbsolutePath, validateOutputPath } from "../settings/settings";
-import * as path from "path";
+import { isAbsolutePath, validateOutputPath, resolveOutputPath, getRelativeOutputPath, type ValidationResult } from "../utils/path-utils";
 
 export class FileExporter {
   private plugin: ArrowheadPlugin;
@@ -13,47 +12,27 @@ export class FileExporter {
     return this.plugin.getVaultRootPath();
   }
 
-  getAbsoluteOutputPath(): Promise<string> {
+  getAbsoluteOutputPath(): string {
     const inputPath = this.plugin.settings.outputDirectory;
-
-    const expandedPath = inputPath.replace("~", process.env.HOME || "");
-
-    if (isAbsolutePath(expandedPath)) {
-      return Promise.resolve(expandedPath);
-    }
-
     const vaultRoot = this.getVaultRootPath();
-    const absolutePath = path.join(vaultRoot, expandedPath);
-    return Promise.resolve(absolutePath);
+    return resolveOutputPath(inputPath, vaultRoot);
   }
 
   getRelativeOutputPath(): string {
     const inputPath = this.plugin.settings.outputDirectory;
-
-    if (isAbsolutePath(inputPath)) {
-      const vaultRoot = this.getVaultRootPath();
-      const expandedPath = inputPath.replace("~", process.env.HOME || "");
-
-      if (expandedPath.startsWith(vaultRoot)) {
-        const relative = expandedPath.substring(vaultRoot.length);
-        return relative;
-      }
-
-      return expandedPath;
-    }
-
-    return inputPath;
+    const vaultRoot = this.getVaultRootPath();
+    return getRelativeOutputPath(inputPath, vaultRoot);
   }
 
-  validateOutputPath(): Promise<{ valid: boolean; resolvedPath: string; error?: string }> {
+  validateOutputPath(): ValidationResult {
     const adapter = this.plugin.getAdapter();
     if (!adapter) {
-      return Promise.resolve({ valid: false, resolvedPath: "", error: "Unable to access file system adapter" });
+      return { valid: false, resolvedPath: "", error: "Unable to access file system adapter" };
     }
 
     const vaultPath = this.getVaultRootPath();
     const inputPath = this.plugin.settings.outputDirectory;
 
-    return Promise.resolve(validateOutputPath(inputPath, vaultPath));
+    return validateOutputPath(inputPath, vaultPath);
   }
 }

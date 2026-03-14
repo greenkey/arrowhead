@@ -9,7 +9,7 @@ src/
 ├── types.ts                   ← Core type definitions
 │
 ├── settings/
-│   ├── settings.ts            ← ArrowheadSettings interface
+│   ├── settings.ts            ← ArrowheadSettings interface (re-exports from path-utils)
 │   └── settings-tab.ts        ← Settings UI component
 │
 ├── generators/
@@ -20,7 +20,8 @@ src/
 │
 ├── utils/
 │   ├── vault-walker.ts        ← Vault scanning & classification
-│   ├── path-resolver.ts       ← Path validation
+│   ├── path-utils.ts          ← Path validation, resolution, URL encoding
+│   ├── markdown-processor.ts  ← Unified markdown processing (wikilinks, embeds, syntax)
 │   ├── template-engine.ts     ← Template processing
 │   └── preview-server.ts      ← HTTP preview server
 │
@@ -61,10 +62,21 @@ src/
   - Extracts frontmatter and metadata
   - Finds wikilinks and embeds
 
-- `utils/path-resolver.ts`: Path utilities:
-  - Validates output paths
-  - Resolves relative to absolute
-  - Security checks (directory traversal)
+- `utils/path-utils.ts`: Consolidated path utilities:
+  - `isAbsolutePath()`: Check if path is absolute
+  - `validateOutputPath()`: Validate and resolve output paths with security checks
+  - `pathToUrl()`: Convert file path to URL-friendly format
+  - `getOutputPath()`: Get output file path with .html extension
+  - `encodeUrlPath()`: URL-encode path segments
+  - `resolveOutputPath()`: Resolve relative paths to absolute
+  - `getRelativeOutputPath()`: Get relative path from absolute
+
+- `utils/markdown-processor.ts`: Unified markdown processing:
+  - `process()`: Full markdown processing pipeline
+  - `processWikiLinks()`: Convert [[wiki links]] to HTML
+  - `processMarkdownSyntax()`: Convert markdown to HTML (headers, bold, italic, etc.)
+  - `processEmbeds()`: Handle image/file embeds
+  - `removeFrontmatter()`: Strip YAML frontmatter from content
 
 - `utils/template-engine.ts`: Template processing for HTML generation.
 
@@ -97,6 +109,12 @@ src/
 2. Add step to generation pipeline
 3. Update: `settings/settings.ts` for configuration
 4. Update: `types.ts` if new types needed
+
+### Adding a New Markdown Feature
+1. Start: `utils/markdown-processor.ts`
+2. Add method to process new syntax
+3. Call from `process()` or `processMarkdownSyntax()`
+4. Tests: Create or update integration tests
 
 ### Fixing a Bug in Link Processing
 1. Start: `utils/vault-walker.ts` for extraction
