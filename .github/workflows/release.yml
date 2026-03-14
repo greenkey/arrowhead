@@ -35,8 +35,13 @@ jobs:
       # Extract version from manifest.json
       run: |
         VERSION=$(jq -r '.version' manifest.json)
-        # Strip 'v' prefix from tag if present
-        TAG_VERSION=${GITHUB_REF_NAME#v}
+        # For tag pushes, extract from GITHUB_REF; for workflow_dispatch, use manifest version
+        if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+          TAG_VERSION=${TAG_VERSION#v}
+        else
+          TAG_VERSION=$VERSION
+        fi
         echo "Manifest Version: $VERSION"
         echo "Tag Version: $TAG_VERSION"
         if [ "$VERSION" != "$TAG_VERSION" ]; then
