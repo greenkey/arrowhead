@@ -59,23 +59,21 @@ jobs:
         echo "  Node version: $(node --version)"
         echo "  NPM version: $(npm --version)"
       
-    - name: Create Plugin ZIP and Release
+    - name: Create Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # Get version
         VERSION=$(git describe --tags --abbrev=0)
         PLUGIN_NAME=$(jq -r '.id' manifest.json)
-        RELEASE_FILE="${{ github.event.repository.name }}-${VERSION}.zip"
         
         echo "Creating release for ${VERSION}"
         
-        # Create Plugin Archive
-        zip -r "$RELEASE_FILE" main.js manifest.json styles.css README.md
-        
-        # Create a draft release
+        # Create release with individual files as assets
         gh release create "$VERSION" \
-          "$RELEASE_FILE" \
+          main.js \
+          manifest.json \
+          styles.css \
           --title "Release $VERSION" \
           --notes-file CHANGELOG.md \
           -n "Built from commit ${GITHUB_SHA:0:7}" \
