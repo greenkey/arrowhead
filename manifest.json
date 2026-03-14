@@ -3,7 +3,7 @@
   "name": "Arrowhead Static Site Generator",
   "version": "1.0.8",
   "minAppVersion": "1.5.0",
-  "description": "Convert your Obsidian vault to a complete static website with customizable themes and export options.",
+  "description": "Convert your vault to a complete static website with customizable themes and export options.",
   "author": "Arrowhead",
   "authorUrl": "https://loman.it",
   "isDesktopOnly": true

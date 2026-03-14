@@ -1,6 +1,6 @@
 # Arrowhead Static Site Generator
 
-Convert your Obsidian vault to a complete static HTML website. The plugin scans your vault, processes markdown files with full formatting support, and generates a clean static site structure ready for deployment.
+Convert your vault to a complete static HTML website. The plugin scans your vault, processes markdown files with full formatting support, and generates a clean static site structure ready for deployment.
 
 ## Quick Start
 
