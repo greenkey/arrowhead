@@ -1,0 +1,83 @@
+.export-status {
+  padding: 1rem;
+  margin: 1rem 0;
+  background: var(--background-secondary);
+  border-radius: 4px;
+}
+
+.success-message {
+  color: var(--text-success);
+  font-weight: 600;
+}
+
+.error-message {
+  color: var(--text-error);
+  font-weight: 600;
+}
+
+.preview-info {
+  background: var(--background-secondary);
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.preview-info h3 {
+  margin-top: 0;
+}
+
+.coming-soon {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.setting-item-description {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.arrowhead-setting-tab {
+  padding: 1rem 0;
+}
+
+.arrowhead-setting-tab h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.arrowhead-setting-tab h2:first-child {
+  margin-top: 0;
+}
+
+.arrowhead-version {
+  font-size: 0.75em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settingResolvedPath {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8em;
+  padding: 4px 8px;
+  background: var(--background-secondary);
+  border-radius: 4px;
+}
+
+.settingError {
+  display: block;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.settingPlaceholder {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8em;
+  color: var(--text-muted);
+  font-style: italic;
+}
