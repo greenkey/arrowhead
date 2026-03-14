@@ -94,10 +94,20 @@ body {
 
 .notebook-body h1,
 .notebook-body h2,
-.notebook-body h3 {
+.notebook-body h3,
+.notebook-body h4,
+.notebook-body h5,
+.notebook-body h6 {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
 }
+
+.notebook-body h1 { font-size: 1.8rem; }
+.notebook-body h2 { font-size: 1.5rem; }
+.notebook-body h3 { font-size: 1.25rem; }
+.notebook-body h4 { font-size: 1.1rem; }
+.notebook-body h5 { font-size: 1rem; }
+.notebook-body h6 { font-size: 0.9rem; }
 
 .notebook-body a {
   color: var(--color-accent);

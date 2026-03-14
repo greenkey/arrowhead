@@ -292,6 +292,9 @@ title: Markdown Test
 # Main Header
 ## Sub Header
 ### Sub Sub Header
+#### Level 4 Header
+##### Level 5 Header
+###### Level 6 Header
 
 **Bold text** and *italic text*
 
@@ -317,6 +320,9 @@ title: Markdown Test
       expect(htmlContent).toContain('<h1>Main Header</h1>');
       expect(htmlContent).toContain('<h2>Sub Header</h2>');
       expect(htmlContent).toContain('<h3>Sub Sub Header</h3>');
+      expect(htmlContent).toContain('<h4>Level 4 Header</h4>');
+      expect(htmlContent).toContain('<h5>Level 5 Header</h5>');
+      expect(htmlContent).toContain('<h6>Level 6 Header</h6>');
       expect(htmlContent).toContain('<strong>Bold text</strong>');
       expect(htmlContent).toContain('<em>italic text</em>');
     });

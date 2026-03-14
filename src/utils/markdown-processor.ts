@@ -75,6 +75,9 @@ export class MarkdownProcessor {
   processMarkdownSyntax(content: string): string {
     let processed = content;
     
+    processed = processed.replace(/^###### (.+)$/gm, "<h6>$1</h6>");
+    processed = processed.replace(/^##### (.+)$/gm, "<h5>$1</h5>");
+    processed = processed.replace(/^#### (.+)$/gm, "<h4>$1</h4>");
     processed = processed.replace(/^### (.+)$/gm, "<h3>$1</h3>");
     processed = processed.replace(/^## (.+)$/gm, "<h2>$1</h2>");
     processed = processed.replace(/^# (.+)$/gm, "<h1>$1</h1>");
