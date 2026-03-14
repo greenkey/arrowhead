@@ -1,9 +1,13 @@
 import tsparser from "@typescript-eslint/parser";
-import { defineConfig } from "eslint/config";
+import { defineConfig, globalIgnores } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
 
-export default defineConfig([
+export default defineConfig(
+  globalIgnores([
+    "**/*.test.ts",
+    "**/*.integration.test.ts",
+  ]),
   ...obsidianmd.configs.recommended,
   {
     files: ["**/*.ts"],
@@ -18,4 +22,4 @@ export default defineConfig([
       },
     },
   },
-]);
+);
