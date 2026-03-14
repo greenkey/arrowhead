@@ -79,5 +79,5 @@ jobs:
           --title "Release $VERSION" \
           --notes-file CHANGELOG.md \
           -n "Built from commit ${GITHUB_SHA:0:7}" \
-          --draft=true
+          --draft=false
       shell: bash
