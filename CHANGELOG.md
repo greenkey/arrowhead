@@ -3,7 +3,18 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://keepachangelog.com/en/2.0.0/).
+
+## [1.0.11]
+
+### Fixes
+- Update plugin ID to `arrowhead` (was `arrowhead-obsidian-plugin`)
+- Fix authorUrl to point to personal site instead of GitHub repo
+- Remove invalid `overrides` property from manifest
+- Track build output files (main.js, styles.css) in git for releases
+
+### Other
+- Add Obsidian to plugin description for clarity
 
 ## [1.0.6]
 
