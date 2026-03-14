@@ -1,6 +1,6 @@
-import { App, PluginSettingTab, Setting, TextComponent, DropdownComponent, ToggleComponent, ButtonComponent } from "obsidian";
+import { App, PluginSettingTab, Setting, TextComponent, ToggleComponent } from "obsidian";
 import ArrowheadPlugin from "../main";
-import { DEFAULT_SETTINGS, ArrowheadSettings, isAbsolutePath, validateOutputPath } from "./settings";
+import { DEFAULT_SETTINGS, ArrowheadSettings, validateOutputPath } from "./settings";
 
 export class ArrowheadSettingTab extends PluginSettingTab {
   plugin: ArrowheadPlugin;
@@ -29,7 +29,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createSiteSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Site information" });
+    new Setting(containerEl)
+      .setName("Site information")
+      .setHeading();
     containerEl.createEl("p", { 
       text: "Basic information about your static site", 
       cls: "setting-description" 
@@ -52,7 +54,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createOutputSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Output settings" });
+    new Setting(containerEl)
+      .setName("Output settings")
+      .setHeading();
     containerEl.createEl("p", {
       text: "Configure where and how your site is generated",
       cls: "setting-description"
@@ -60,10 +64,8 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     const vaultPath = this.plugin.getVaultRootPath();
 
-    // eslint-disable-next-line prefer-const
     let outputTextComponent: TextComponent | null = null;
-    // eslint-disable-next-line prefer-const
-    let resolvedPathDisplay: HTMLElement;
+    const resolvedPathDisplay = containerEl.createEl("div", { cls: "resolved-path-display" });
 
     new Setting(containerEl)
       .setName("Output directory")
@@ -105,12 +107,13 @@ export class ArrowheadSettingTab extends PluginSettingTab {
         });
       });
 
-    resolvedPathDisplay = containerEl.createEl("div", { cls: "resolved-path-display" });
     this.updateResolvedPathDisplay(this.plugin.settings.outputDirectory, resolvedPathDisplay);
   }
 
   private createGenerationSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Generation options" });
+    new Setting(containerEl)
+      .setName("Generation options")
+      .setHeading();
     containerEl.createEl("p", { 
       text: "Configure what content and features are included", 
       cls: "setting-description" 
@@ -143,7 +146,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createContentSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Content organization" });
+    new Setting(containerEl)
+      .setName("Content organization")
+      .setHeading();
     containerEl.createEl("p", { 
       text: "Configure which folders contain posts and pages", 
       cls: "setting-description" 
@@ -175,7 +180,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createPreviewSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Preview settings" });
+    new Setting(containerEl)
+      .setName("Preview settings")
+      .setHeading();
     containerEl.createEl("p", { 
       text: "Configure the in-app preview functionality", 
       cls: "setting-description" 
@@ -203,7 +210,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
   }
 
   private createAdvancedSettings(containerEl: HTMLElement): void {
-    containerEl.createEl("h2", { text: "Advanced" });
+    new Setting(containerEl)
+      .setName("Advanced")
+      .setHeading();
     containerEl.createEl("p", { 
       text: "Fine-tune the generation process", 
       cls: "setting-description" 
@@ -255,9 +264,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       });
 
       if (validation.valid) {
-        label.style.color = "var(--text-success)";
+        label.addClass("path-valid");
       } else {
-        label.style.color = "var(--text-error)";
+        label.addClass("path-invalid");
         label.createEl("br");
         label.createEl("span", {
           text: `Error: ${validation.error}`,

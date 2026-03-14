@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { vi } from 'vitest';
 import { FileExporter } from './exporters/file-exporter';
-import { createMockPlugin } from './test/mocks';
 
 function createFileExporterMockPlugin(vaultPath: string, outputDirectory: string) {
   const adapter = {

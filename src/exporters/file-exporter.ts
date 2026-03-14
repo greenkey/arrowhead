@@ -1,4 +1,4 @@
-import ArrowheadPlugin from "../main";
+import type ArrowheadPlugin from "../main";
 import { isAbsolutePath, validateOutputPath } from "../settings/settings";
 import * as path from "path";
 
@@ -13,18 +13,18 @@ export class FileExporter {
     return this.plugin.getVaultRootPath();
   }
 
-  async getAbsoluteOutputPath(): Promise<string> {
+  getAbsoluteOutputPath(): Promise<string> {
     const inputPath = this.plugin.settings.outputDirectory;
 
     const expandedPath = inputPath.replace("~", process.env.HOME || "");
 
     if (isAbsolutePath(expandedPath)) {
-      return expandedPath;
+      return Promise.resolve(expandedPath);
     }
 
     const vaultRoot = this.getVaultRootPath();
     const absolutePath = path.join(vaultRoot, expandedPath);
-    return absolutePath;
+    return Promise.resolve(absolutePath);
   }
 
   getRelativeOutputPath(): string {
@@ -45,15 +45,15 @@ export class FileExporter {
     return inputPath;
   }
 
-  async validateOutputPath(): Promise<{ valid: boolean; resolvedPath: string; error?: string }> {
+  validateOutputPath(): Promise<{ valid: boolean; resolvedPath: string; error?: string }> {
     const adapter = this.plugin.getAdapter();
     if (!adapter) {
-      return { valid: false, resolvedPath: "", error: "Unable to access file system adapter" };
+      return Promise.resolve({ valid: false, resolvedPath: "", error: "Unable to access file system adapter" });
     }
 
     const vaultPath = this.getVaultRootPath();
     const inputPath = this.plugin.settings.outputDirectory;
 
-    return validateOutputPath(inputPath, vaultPath);
+    return Promise.resolve(validateOutputPath(inputPath, vaultPath));
   }
 }

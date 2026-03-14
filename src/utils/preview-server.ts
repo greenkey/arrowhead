@@ -4,16 +4,10 @@ import * as path from "path";
 
 let server: http.Server | null = null;
 let currentPort: number = 0;
-let currentOutputDir: string = "";
-let hasGeneratedSinceServerStart: boolean = false;
-let pendingStartPromise: Promise<number> | null = null;
 
 export function resetServerState(): void {
   server = null;
   currentPort = 0;
-  currentOutputDir = "";
-  hasGeneratedSinceServerStart = false;
-  pendingStartPromise = null;
 }
 
 async function isPortAvailable(port: number): Promise<boolean> {
@@ -40,8 +34,6 @@ export async function startServer(outputDir: string, preferredPort: number = 345
     await new Promise(resolve => setTimeout(resolve, 500));
   }
 
-  hasGeneratedSinceServerStart = false;
-  currentOutputDir = outputDir;
   const maxAttempts = 100;
   let port = preferredPort;
 
@@ -55,7 +47,6 @@ export async function startServer(outputDir: string, preferredPort: number = 345
     try {
       const availablePort = await tryStartServer(outputDir, port);
       currentPort = availablePort;
-      pendingStartPromise = null;
       return availablePort;
     } catch (error: unknown) {
       const err = error as { code?: string };
@@ -63,12 +54,10 @@ export async function startServer(outputDir: string, preferredPort: number = 345
         port++;
         continue;
       }
-      pendingStartPromise = null;
       throw error;
     }
   }
 
-  pendingStartPromise = null;
   throw new Error(`Could not find available port after ${maxAttempts} attempts`);
 }
 
@@ -145,7 +134,7 @@ function tryStartServer(outputDir: string, port: number): Promise<number> {
       reject(error);
     });
 
-    serverInstance.on('clientError', (err, socket) => {
+    serverInstance.on('clientError', (_err, socket) => {
       socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
     });
 
@@ -164,8 +153,6 @@ export async function stopServer(): Promise<void> {
       server.close((err) => {
         server = null;
         currentPort = 0;
-        currentOutputDir = "";
-        hasGeneratedSinceServerStart = false;
         
         if (err) {
           reject(err);
@@ -177,21 +164,17 @@ export async function stopServer(): Promise<void> {
       setTimeout(() => {
         if (server === serverRef && serverRef) {
           try {
-            (serverRef as any).closeAllConnections?.();
+            (serverRef as unknown as { closeAllConnections?: () => void }).closeAllConnections?.();
             serverRef.unref();
-          } catch (e) { /* ignore */ }
+          } catch { /* ignore */ }
           server = null;
           currentPort = 0;
-          currentOutputDir = "";
-          hasGeneratedSinceServerStart = false;
           resolve();
         }
       }, 2000);
     } else {
       server = null;
       currentPort = 0;
-      currentOutputDir = "";
-      hasGeneratedSinceServerStart = false;
       resolve();
     }
   });
@@ -212,9 +195,11 @@ export function getServerUrl(): string {
   return `http://localhost:${currentPort}`;
 }
 
+let _hasGeneratedSinceServerStart = false;
+
 export function beforeFirstGeneration(): boolean {
-  if (!hasGeneratedSinceServerStart) {
-    hasGeneratedSinceServerStart = true;
+  if (!_hasGeneratedSinceServerStart) {
+    _hasGeneratedSinceServerStart = true;
     return true;
   }
   return false;

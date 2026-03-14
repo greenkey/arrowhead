@@ -1,4 +1,5 @@
 import ArrowheadPlugin from "../main";
+import { TFile, CachedMetadata } from "obsidian";
 
 export interface VaultData {
   files: VaultFile[];
@@ -168,7 +169,7 @@ export class VaultWalker {
     };
   }
 
-  private async processMarkdownFile(file: any): Promise<VaultFile> {
+  private async processMarkdownFile(file: TFile): Promise<VaultFile> {
     const vault = this.plugin.app.vault;
     const metadataCache = this.plugin.app.metadataCache;
     
@@ -204,9 +205,14 @@ export class VaultWalker {
       return undefined;
     }
 
-    return {
-      date: String(dateField)
-    };
+    if (typeof dateField === "string") {
+      return { date: dateField };
+    }
+    if (dateField instanceof Date || typeof dateField === "number") {
+      return { date: String(dateField) };
+    }
+
+    return undefined;
   }
 
   private extractTags(frontmatter: Record<string, unknown>, content: string): string[] {
@@ -227,7 +233,7 @@ export class VaultWalker {
     return [...new Set(tags)];
   }
 
-  private extractLinks(content: string, metadata: any): OutgoingLink[] {
+  private extractLinks(content: string, metadata: CachedMetadata): OutgoingLink[] {
     const links: OutgoingLink[] = [];
     
     const wikiLinkRegex = /\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;

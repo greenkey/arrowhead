@@ -47,6 +47,7 @@ describe('SiteGenerator - Failing Test for Attachment Bug', () => {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const generator = new SiteGenerator(mockPlugin as any);
 
     const mockAttachments = [
@@ -54,9 +55,10 @@ describe('SiteGenerator - Failing Test for Attachment Bug', () => {
       { path: 'document.pdf' }
     ];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (generator as any).copyAttachments(mockAttachments, 'public');
 
-    console.log('Copy calls:', JSON.stringify(copiedPaths, null, 2));
+    console.debug('Copy calls:', JSON.stringify(copiedPaths, null, 2));
 
     expect(copiedPaths).toHaveLength(2);
 

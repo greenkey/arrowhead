@@ -1,9 +1,15 @@
 import ArrowheadPlugin from "../main";
-import { VaultData, VaultFile } from "../utils/vault-walker";
+import type { VaultData, VaultFile } from "../utils/vault-walker";
 import { isAbsolutePath } from "../settings/settings";
-import { TemplateEngine, TemplateData } from "../utils/template-engine";
+import { TemplateEngine } from "../utils/template-engine";
+import type { TemplateData } from "../utils/template-engine";
 import * as fs from "fs";
 import * as path from "path";
+import { TFile } from "obsidian";
+
+function isTFile(file: unknown): file is TFile {
+  return typeof file === "object" && file !== null && "stat" in file && "name" in file;
+}
 
 export class SiteGenerator {
   private plugin: ArrowheadPlugin;
@@ -18,7 +24,7 @@ export class SiteGenerator {
     await this.ensureBaseDirectory(outputPath);
 
     await this.clearOutputDirectory(outputPath);
-    await this.copyTemplateAssets(outputPath);
+    this.copyTemplateAssets(outputPath);
 
     const startTime = Date.now();
 
@@ -40,7 +46,7 @@ export class SiteGenerator {
       await this.copyAttachments(vaultData.attachments, outputPath);
     }
 
-    const elapsed = Date.now() - startTime;
+    const _elapsed = Date.now() - startTime;
   }
 
   private removeFrontmatter(content: string): string {
@@ -179,7 +185,7 @@ export class SiteGenerator {
     return result;
   }
 
-  private processLinks(content: string, file: VaultFile, vaultData: VaultData): string {
+  private processLinks(content: string, file: VaultFile, _vaultData: VaultData): string {
     const linkMap = new Map<string, string>();
     
     for (const link of file.links) {
@@ -201,7 +207,7 @@ export class SiteGenerator {
     return processedContent;
   }
 
-  private processEmbeds(content: string, file: VaultFile, vaultData: VaultData): string {
+  private processEmbeds(content: string, file: VaultFile, _vaultData: VaultData): string {
     if (!this.plugin.settings.processEmbeds) {
       return this.processMarkdown(content);
     }
@@ -259,8 +265,9 @@ export class SiteGenerator {
   }
 
   private getTitle(file: VaultFile): string {
-    if (file.frontmatter.title) {
-      return String(file.frontmatter.title);
+    const title = file.frontmatter.title;
+    if (title && typeof title === "string") {
+      return title;
     }
     
     return file.name.replace(/\.md$/i, "");
@@ -381,8 +388,8 @@ private pathToUrl(path: string): string {
     
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(indexTemplatePath);
-      if (file) {
-        return await this.plugin.app.vault.cachedRead(file as any);
+      if (file && isTFile(file)) {
+        return await this.plugin.app.vault.cachedRead(file);
       }
     } catch (error) {
       // Custom template not found, use default
@@ -568,16 +575,12 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
 
         if (!exists) {
           fs.mkdirSync(outputPath, { recursive: true });
-
-          const verifyExists = fs.existsSync(outputPath);
         }
       } else {
         const exists = await adapter.exists(outputPath);
 
         if (!exists) {
           await adapter.mkdir(outputPath);
-
-          const verifyExists = await adapter.exists(outputPath);
         }
       }
     } catch (error) {
@@ -641,7 +644,7 @@ Sitemap: ${this.plugin.settings.siteUrl}/sitemap.xml`;
     }
   }
 
-  private async copyTemplateAssets(outputPath: string): Promise<void> {
+  private copyTemplateAssets(outputPath: string): void {
     const cssFileName = "styles.css";
     const assetsPath = `${outputPath}/assets`;
 

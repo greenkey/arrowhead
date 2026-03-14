@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { SiteGenerator } from './site-generator';
-import { VaultData, VaultFile } from '../utils/vault-walker';
+import type { VaultData, VaultFile } from '../utils/vault-walker';
 import { vi } from 'vitest';
 
 describe('SiteGenerator Integration Tests', () => {

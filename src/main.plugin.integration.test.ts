@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as http from 'http';
 import { vi } from 'vitest';
-import { validateOutputPath, isAbsolutePath, ArrowheadSettings, DEFAULT_SETTINGS } from './settings/settings';
+import { validateOutputPath, isAbsolutePath, DEFAULT_SETTINGS } from './settings/settings';
+import type { ArrowheadSettings } from './settings/settings';
 
 describe('Main Plugin Integration Tests', () => {
   let tmpDir: string;

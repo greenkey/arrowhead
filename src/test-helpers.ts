@@ -40,11 +40,11 @@ export class TestVaultManager {
     this.outputPath = config.outputPath;
   }
 
-  async setup(): Promise<void> {
-    await this.createDirectoryStructure();
+  setup(): void {
+    this.createDirectoryStructure();
   }
 
-  async cleanup(): Promise<void> {
+  cleanup(): void {
     for (const filePath of this.createdFiles) {
       try {
         if (fs.existsSync(filePath)) {
@@ -61,7 +61,7 @@ export class TestVaultManager {
     this.createdFiles = [];
   }
 
-  private async createDirectoryStructure(): Promise<void> {
+  private createDirectoryStructure(): void {
     const directories = [
       this.vaultPath,
       `${this.vaultPath}/posts`,
@@ -79,7 +79,7 @@ export class TestVaultManager {
     }
   }
 
-  async createFile(filePath: string, content: string): Promise<void> {
+  createFile(filePath: string, content: string): void {
     const fullPath = path.join(this.vaultPath, filePath);
     const dir = path.dirname(fullPath);
 
@@ -92,9 +92,9 @@ export class TestVaultManager {
     this.createdFiles.push(fullPath);
   }
 
-  async createFiles(files: TestVaultFile[]): Promise<void> {
+  createFiles(files: TestVaultFile[]): void {
     for (const file of files) {
-      await this.createFile(file.path, file.content);
+      this.createFile(file.path, file.content);
     }
   }
 
@@ -106,7 +106,7 @@ export class TestVaultManager {
     return this.outputPath;
   }
 
-  async getFileContent(relativePath: string): Promise<string | undefined> {
+  getFileContent(relativePath: string): string | undefined {
     const fullPath = path.join(this.vaultPath, relativePath);
     if (!fs.existsSync(fullPath)) {
       return undefined;
@@ -114,7 +114,7 @@ export class TestVaultManager {
     return fs.readFileSync(fullPath, 'utf-8');
   }
 
-  async fileExists(relativePath: string): Promise<boolean> {
+  fileExists(relativePath: string): boolean {
     const fullPath = path.join(this.vaultPath, relativePath);
     return fs.existsSync(fullPath);
   }
@@ -123,7 +123,7 @@ export class TestVaultManager {
 export class OutputVerifier {
   constructor(private outputPath: string) {}
 
-  async fileExists(relativePath: string): Promise<boolean> {
+  fileExists(relativePath: string): boolean {
     const fullPath = path.join(this.outputPath, relativePath);
     return fs.existsSync(fullPath);
   }
@@ -154,17 +154,17 @@ export class OutputVerifier {
     return count;
   }
 
-  async readFile(relativePath: string): Promise<string> {
+  readFile(relativePath: string): string {
     const fullPath = path.join(this.outputPath, relativePath);
     return fs.readFileSync(fullPath, 'utf-8');
   }
 
-  async containsText(relativePath: string, text: string): Promise<boolean> {
-    const content = await this.readFile(relativePath);
+  containsText(relativePath: string, text: string): boolean {
+    const content = this.readFile(relativePath);
     return content.includes(text);
   }
 
-  async countFilesByExtension(extension: string): Promise<number> {
+  countFilesByExtension(extension: string): number {
     let count = 0;
 
     const countInDirectory = (dirPath: string) => {
@@ -185,7 +185,7 @@ export class OutputVerifier {
     return count;
   }
 
-  async listHtmlFiles(): Promise<string[]> {
+  listHtmlFiles(): string[] {
     const htmlFiles: string[] = [];
 
     const listInDirectory = (dirPath: string, basePath: string = '') => {
@@ -229,12 +229,12 @@ export function createMockSettings(overrides?: Partial<ArrowheadSettings>): Arro
   };
 }
 
-export async function createTemporaryDirectory(): Promise<string> {
+export function createTemporaryDirectory(): string {
   const tmpDir = fs.mkdtempSync('/tmp/arrowhead-test-');
   return tmpDir;
 }
 
-export async function cleanupTemporaryDirectory(dirPath: string): Promise<void> {
+export function cleanupTemporaryDirectory(dirPath: string): void {
   if (fs.existsSync(dirPath)) {
     fs.rmSync(dirPath, { recursive: true });
   }

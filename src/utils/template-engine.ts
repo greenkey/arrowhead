@@ -1,4 +1,9 @@
 import ArrowheadPlugin from "../main";
+import { TFile } from "obsidian";
+
+function isTFile(file: unknown): file is TFile {
+  return typeof file === "object" && file !== null && "stat" in file && "name" in file;
+}
 
 export interface Post {
   title: string;
@@ -75,10 +80,10 @@ export class TemplateEngine {
     
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(partialPath);
-      if (file) {
-        return await this.plugin.app.vault.cachedRead(file as any);
+      if (file && isTFile(file)) {
+        return await this.plugin.app.vault.cachedRead(file);
       }
-    } catch (error) {
+    } catch {
       console.warn(`Custom partial not found: ${partialPath}`);
     }
     
@@ -150,7 +155,10 @@ export class TemplateEngine {
           if (typeof item === "object" && item !== null) {
             const itemObj = item as Record<string, unknown>;
             itemContent = itemContent.replace(/\{\{(\w+)\}\}/g, (_match: string, propKey: string) => {
-              return String(itemObj[propKey] ?? "");
+              const value = itemObj[propKey];
+              if (value === null || value === undefined) return "";
+              if (typeof value === "object") return JSON.stringify(value);
+              return String(value);
             });
           }
           
@@ -192,8 +200,8 @@ export class TemplateEngine {
       const templatePath = `templates/${templateName}/layout.html`;
       try {
         const file = this.plugin.app.vault.getAbstractFileByPath(templatePath);
-        if (file) {
-          template = await this.plugin.app.vault.cachedRead(file as any);
+        if (file && isTFile(file)) {
+          template = await this.plugin.app.vault.cachedRead(file);
         } else {
           console.warn(`Custom template not found: ${templateName}`);
           template = this.getDefaultTemplate();

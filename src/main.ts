@@ -1,10 +1,10 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, TFolder, FileSystemAdapter, Workspace } from "obsidian";
+import { Notice, Plugin, FileSystemAdapter } from "obsidian";
 import { ArrowheadSettingTab } from "./settings/settings-tab";
-import { DEFAULT_SETTINGS, ArrowheadSettings } from "./settings/settings";
+import { DEFAULT_SETTINGS } from "./settings/settings";
 import { SiteGenerator } from "./generators/site-generator";
 import { FileExporter } from "./exporters/file-exporter";
 import { VaultWalker } from "./utils/vault-walker";
-import { startServer, stopServer, getServerUrl, isServerRunning, beforeFirstGeneration } from "./utils/preview-server";
+import { startServer, stopServer, getServerUrl, isServerRunning } from "./utils/preview-server";
 
 export default class ArrowheadPlugin extends Plugin {
   settings: typeof DEFAULT_SETTINGS;
@@ -23,17 +23,17 @@ export default class ArrowheadPlugin extends Plugin {
     this.fileExporter = new FileExporter(this);
     this.vaultWalker = new VaultWalker(this);
 
-    this.previewRibbonIcon = this.addRibbonIcon("eye", "Open Preview", async () => {
+    this.previewRibbonIcon = this.addRibbonIcon("eye", "Open preview", async () => {
       await this.openPreview();
     });
 
-    this.liveModeRibbonIcon = this.addRibbonIcon("cloud", "Live Mode", async () => {
+    this.liveModeRibbonIcon = this.addRibbonIcon("cloud", "Live mode", async () => {
       await this.toggleLiveMode();
     });
 
     this.updateLiveModeIcon();
 
-    this.addRibbonIcon("gear", "Arrowhead Settings", () => {
+    this.addRibbonIcon("gear", "Arrowhead settings", () => {
       const app = this.app as unknown as { setting: { open(): void; openTabById(id: string): void } };
       app.setting.open();
       app.setting.openTabById("arrowhead-obsidian-plugin");
@@ -41,7 +41,7 @@ export default class ArrowheadPlugin extends Plugin {
 
     this.addCommand({
       id: "generate-static-site",
-      name: "Generate Static Site",
+      name: "Generate static site",
       callback: async () => {
         await this.generateSite();
       }
@@ -49,7 +49,7 @@ export default class ArrowheadPlugin extends Plugin {
 
     this.addCommand({
       id: "generate-site-preview",
-      name: "Preview Generated Site",
+      name: "Preview generated site",
       callback: async () => {
         await this.openPreview();
       }
@@ -66,11 +66,11 @@ export default class ArrowheadPlugin extends Plugin {
     const isLive = isServerRunning() && this.settings.autoRegenerate;
     
     if (isLive) {
-      this.liveModeRibbonIcon.setAttribute("aria-label", "Live Mode Active - Click to Stop");
-      this.liveModeRibbonIcon.style.color = "var(--text-success)";
+      this.liveModeRibbonIcon.setAttribute("aria-label", "Live mode active - click to stop");
+      this.liveModeRibbonIcon.addClass("live-mode-active");
     } else {
-      this.liveModeRibbonIcon.setAttribute("aria-label", "Live Mode Inactive - Click to Start");
-      this.liveModeRibbonIcon.style.color = "";
+      this.liveModeRibbonIcon.setAttribute("aria-label", "Live mode inactive - click to start");
+      this.liveModeRibbonIcon.removeClass("live-mode-active");
     }
   }
 
@@ -135,7 +135,7 @@ export default class ArrowheadPlugin extends Plugin {
   }
 
   onunload() {
-    stopServer();
+    void stopServer();
   }
 
   async loadSettings() {
@@ -188,7 +188,7 @@ export default class ArrowheadPlugin extends Plugin {
     }
   }
 
-  private async exportArchive(): Promise<void> {
+  private exportArchive(): void {
     new Notice("Archive export functionality coming soon!");
   }
 
@@ -201,16 +201,16 @@ export default class ArrowheadPlugin extends Plugin {
           clearTimeout(this.debounceTimer);
         }
         
-        this.debounceTimer = setTimeout(async () => {
-          await this.generateSite(true);
+        this.debounceTimer = setTimeout(() => {
+          void this.generateSite(true);
         }, 1000);
       }
     }));
 
-    this.registerEvent(this.app.vault.on("delete", (file) => {
+    this.registerEvent(this.app.vault.on("delete", (_file) => {
     }));
 
-    this.registerEvent(this.app.vault.on("rename", (file, oldPath) => {
+    this.registerEvent(this.app.vault.on("rename", (_file, _oldPath) => {
     }));
   }
 

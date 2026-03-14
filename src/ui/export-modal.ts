@@ -1,4 +1,4 @@
-import { App, Modal, Notice, Setting } from "obsidian";
+import { App, Modal, Setting } from "obsidian";
 import ArrowheadPlugin from "../main";
 
 export class ExportModal extends Modal {
@@ -13,10 +13,10 @@ export class ExportModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     
-    contentEl.createEl("h2", { text: "Export Static Site" });
+    contentEl.createEl("h2", { text: "Export static site" });
     
     new Setting(contentEl)
-      .setName("Output Directory")
+      .setName("Output directory")
       .setDesc("Files will be generated in this directory")
       .addText(text => {
         text.setValue(this.plugin.settings.outputDirectory);
@@ -27,7 +27,7 @@ export class ExportModal extends Modal {
       });
     
     new Setting(contentEl)
-      .setName("Include All Notes")
+      .setName("Include all notes")
       .setDesc("Export all notes in your vault")
       .addToggle(toggle => {
         toggle.setValue(true);

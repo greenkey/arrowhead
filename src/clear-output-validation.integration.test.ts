@@ -1,10 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { SiteGenerator } from './generators/site-generator';
-import { VaultData } from './utils/vault-walker';
-import { isAbsolutePath } from './settings/settings';
 import { vi } from 'vitest';
 
 describe('SiteGenerator.clearOutputDirectory Tests', () => {
