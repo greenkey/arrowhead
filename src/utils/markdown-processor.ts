@@ -86,12 +86,114 @@ export class MarkdownProcessor {
     processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
     processed = processed.replace(/`(.+?)`/g, "<code>$1</code>");
     
-    processed = processed.replace(/^- (.+)$/gm, "<li>$1</li>");
-    processed = processed.replace(/(<li>.*?<\/li>\n*)+/g, (match) => "<ul>" + match.replace(/\n/g, '') + "</ul>");
+    processed = this.processLists(processed);
     
     processed = this.replaceNewlinesOutsideHtml(processed);
     
     return processed;
+  }
+
+  processLists(content: string): string {
+    const lines = content.split('\n');
+    const resultLines: string[] = [];
+    let i = 0;
+    
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line) {
+        i++;
+        continue;
+      }
+      
+      const listMatch = line.match(/^(\s*)([-*+]) (.+)$/);
+      
+      if (!listMatch) {
+        resultLines.push(line);
+        i++;
+        continue;
+      }
+      
+      const baseIndent = listMatch[1]?.length ?? 0;
+      const listItems: { indent: number; text: string }[] = [];
+      
+      while (i < lines.length) {
+        const currentLine = lines[i];
+        if (!currentLine) {
+          i++;
+          continue;
+        }
+        
+        const currentMatch = currentLine.match(/^(\s*)([-*+]) (.+)$/);
+        
+        if (!currentMatch) {
+          break;
+        }
+        
+        const currentIndent = currentMatch[1]?.length ?? 0;
+        const itemText = currentMatch[3] ?? '';
+        
+        if (currentIndent < baseIndent) {
+          break;
+        }
+        
+        const relativeIndent = currentIndent - baseIndent;
+        listItems.push({ indent: relativeIndent, text: itemText });
+        i++;
+      }
+      
+      if (listItems.length > 0) {
+        const nestedHtml = this.buildNestedListFromItems(listItems);
+        resultLines.push(nestedHtml);
+      }
+    }
+    
+    return resultLines.join('\n');
+  }
+
+  buildNestedListFromItems(items: { indent: number; text: string }[]): string {
+    if (items.length === 0) return '';
+    
+    let html = '<ul>';
+    let i = 0;
+    
+    while (i < items.length) {
+      const item = items[i];
+      if (!item) {
+        i++;
+        continue;
+      }
+      
+      const currentIndent = item.indent;
+      html += '<li>' + item.text;
+      
+      const nestedItems: { indent: number; text: string }[] = [];
+      let j = i + 1;
+      
+      while (j < items.length) {
+        const nextItem = items[j];
+        if (!nextItem) {
+          j++;
+          continue;
+        }
+        
+        if (nextItem.indent > currentIndent) {
+          nestedItems.push({ indent: nextItem.indent - currentIndent - 1, text: nextItem.text });
+          j++;
+        } else {
+          break;
+        }
+      }
+      
+      if (nestedItems.length > 0) {
+        html += this.buildNestedListFromItems(nestedItems);
+      }
+      
+      html += '</li>';
+      i = j;
+    }
+    
+    html += '</ul>';
+    return html;
   }
 
   replaceNewlinesOutsideHtml(content: string): string {

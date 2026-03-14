@@ -381,6 +381,52 @@ Second line of text.
       expect(htmlContent).toContain('<br>');
       expect(htmlContent).toContain('Regular text with line break.<br>Second line of text.');
     });
+
+    it('should handle nested bullet points', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/nested-list.md',
+          name: 'nested-list.md',
+          extension: 'md',
+          content: `---
+title: Nested List Test
+---
+# Nested Lists
+
+- First level
+  - Second level
+    - Third level
+- Back to first
+`,
+          frontmatter: { title: 'Nested List Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'nested-list.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      expect(htmlContent).toContain('<ul>');
+      expect(htmlContent).toContain('First level');
+      expect(htmlContent).toContain('Second level');
+      expect(htmlContent).toContain('Third level');
+      expect(htmlContent).toContain('Back to first');
+      expect(htmlContent).toContain('</ul>');
+      
+      expect(htmlContent).toMatch(/<ul><li>First level<ul>/);
+      expect(htmlContent).toMatch(/<ul><li>Second level<ul>/);
+    });
   });
 
   describe('End-to-end generation workflow', () => {
