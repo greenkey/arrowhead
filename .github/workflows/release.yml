@@ -69,14 +69,17 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Get version
-        VERSION=$(git describe --tags --abbrev=0)
+        # Get version from manifest (this is the canonical version)
+        VERSION=$(jq -r '.version' manifest.json)
         PLUGIN_NAME=$(jq -r '.id' manifest.json)
         
         echo "Creating release for ${VERSION}"
         
+        # Get the tag name that triggered this workflow (strip refs/tags/ prefix)
+        TAG_NAME=${GITHUB_REF#refs/tags/}
+        
         # Create release with individual files as assets
-        gh release create "$VERSION" \
+        gh release create "$TAG_NAME" \
           main.js \
           manifest.json \
           styles.css \
