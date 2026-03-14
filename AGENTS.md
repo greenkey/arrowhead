@@ -150,7 +150,7 @@ Follow existing commit message style (concise, action-oriented).
 
 Before pushing, always run:
 ```bash
-npm run lint && npm run typecheck && npm run test
+npm run lint && npm run typecheck && npm run test && npm run build
 ```
 
 If tests fail or linting errors exist, fix them before pushing.

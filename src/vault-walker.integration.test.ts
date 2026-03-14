@@ -5,6 +5,7 @@ import * as os from 'os';
 import { vi } from 'vitest';
 import { VaultWalker, classifyFile, VaultData } from './utils/vault-walker';
 import { MockVaultFile, createMockVaultFile, createMockVaultWithTestFiles, TestVaultFile } from './test/mocks';
+import type ArrowheadPlugin from './main';
 
 describe('VaultWalker Integration Tests', () => {
   let tmpDir: string;
@@ -20,7 +21,7 @@ describe('VaultWalker Integration Tests', () => {
     fs.rmSync(tmpDir, { recursive: true });
   });
 
-  function createMockPluginWithFiles(files: TestVaultFile[]): unknown {
+  function createMockPluginWithFiles(files: TestVaultFile[]): ArrowheadPlugin {
     const vault = createMockVaultWithTestFiles(files, vaultPath);
 
     const mockFiles = files.map(file =>
@@ -74,7 +75,7 @@ describe('VaultWalker Integration Tests', () => {
         }
       },
       getVaultRootPath: vi.fn().mockReturnValue(vaultPath)
-    };
+    } as unknown as ArrowheadPlugin;
   }
 
   describe('File Classification', () => {
