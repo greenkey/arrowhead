@@ -1,7 +1,7 @@
 {
   "id": "arrowhead",
   "name": "Arrowhead Static Site Generator",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "minAppVersion": "1.5.0",
   "description": "Convert your vault to a complete static website with customizable themes and export options.",
   "author": "Arrowhead",
