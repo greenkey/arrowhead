@@ -15,6 +15,7 @@ build/
 *.tsbuildinfo
 !src/**/*.js
 !src/**/*.d.ts
+main.js
 
 .opencode/
 openspec/
