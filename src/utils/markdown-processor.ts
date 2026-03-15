@@ -82,6 +82,10 @@ export class MarkdownProcessor {
     processed = processed.replace(/^## (.+)$/gm, "<h2>$1</h2>");
     processed = processed.replace(/^# (.+)$/gm, "<h1>$1</h1>");
     
+    processed = processed.replace(/^---+$/gm, "<hr>");
+    processed = processed.replace(/^\*\*\*+$/gm, "<hr>");
+    processed = processed.replace(/^___+$/gm, "<hr>");
+    
     processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
     processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
     processed = processed.replace(/`(.+?)`/g, "<code>$1</code>");

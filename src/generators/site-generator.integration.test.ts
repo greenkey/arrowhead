@@ -456,6 +456,95 @@ title: Nested List Test
       expect(htmlContent).toMatch(/<ul><li>First level<ul>/);
       expect(htmlContent).toMatch(/<ul><li>Second level<ul>/);
     });
+
+    it('should convert horizontal rules from markdown to HTML', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/hr-test.md',
+          name: 'hr-test.md',
+          extension: 'md',
+          content: `---
+title: Horizontal Rule Test
+---
+# Before hr
+
+---
+
+Content after hr
+
+---
+
+### After second hr
+`,
+          frontmatter: { title: 'Horizontal Rule Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'hr-test.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      expect(htmlContent).toContain('<h1>Before hr</h1>');
+      expect(htmlContent).toContain('<hr>');
+      expect(htmlContent).toContain('Content after hr');
+      expect(htmlContent).toContain('<h3>After second hr</h3>');
+    });
+
+    it('should convert *** and ___ horizontal rules to HTML', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/hr-alternatives.md',
+          name: 'hr-alternatives.md',
+          extension: 'md',
+          content: `---
+title: HR Alternatives Test
+---
+# Using asterisks
+
+***
+
+Content between
+
+___
+
+### Using underscores
+`,
+          frontmatter: { title: 'HR Alternatives Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'hr-alternatives.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      const hrCount = (htmlContent.match(/<hr>/g) || []).length;
+      expect(hrCount).toBe(2);
+      expect(htmlContent).toContain('<h1>Using asterisks</h1>');
+      expect(htmlContent).toContain('Content between');
+      expect(htmlContent).toContain('<h3>Using underscores</h3>');
+    });
   });
 
   describe('End-to-end generation workflow', () => {
