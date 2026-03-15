@@ -190,32 +190,33 @@ export class TemplateEngine {
     
     let template: string;
     
-    if (templateName === "default") {
-      template = this.getDefaultTemplate();
-    } else if (templateName === "minimal") {
-      template = this.getMinimalTemplate();
-    } else if (templateName === "notebook") {
-      template = this.getNotebookTemplate();
-    } else {
-      const templatePath = `templates/${templateName}/layout.html`;
-      try {
-        const file = this.plugin.app.vault.getAbstractFileByPath(templatePath);
-        if (file && isTFile(file)) {
-          template = await this.plugin.app.vault.cachedRead(file);
-        } else {
-          console.warn(`Custom template not found: ${templateName}`);
-          template = this.getDefaultTemplate();
-        }
-      } catch {
-        console.warn(`Custom template not found: ${templateName}`);
-        template = this.getDefaultTemplate();
+    const templatePath = `templates/${templateName}/layout.html`;
+    try {
+      const file = this.plugin.app.vault.getAbstractFileByPath(templatePath);
+      if (file && isTFile(file)) {
+        template = await this.plugin.app.vault.cachedRead(file);
+      } else {
+        template = this.getBuiltInTemplate(templateName);
       }
+    } catch {
+      template = this.getBuiltInTemplate(templateName);
     }
     
     this.cachedTemplate = template;
     this.currentTemplateName = templateName;
     
     return template;
+  }
+  
+  private getBuiltInTemplate(templateName: string): string {
+    if (templateName === "default") {
+      return this.getDefaultTemplate();
+    } else if (templateName === "minimal") {
+      return this.getMinimalTemplate();
+    } else if (templateName === "notebook") {
+      return this.getNotebookTemplate();
+    }
+    return this.getDefaultTemplate();
   }
 
   getCachedTemplate(): string | null {
@@ -251,6 +252,11 @@ export class TemplateEngine {
   </header>
 
   <main class="site-content">
+    {{#if date}}
+    <div class="post-meta">
+      <time datetime="{{date}}">{{date}}</time>
+    </div>
+    {{/if}}
     {{content}}
   </main>
 
@@ -279,6 +285,11 @@ export class TemplateEngine {
 <body>
   <main class="content">
     <article>
+      {{#if date}}
+      <div class="post-meta">
+        <time datetime="{{date}}">{{date}}</time>
+      </div>
+      {{/if}}
       {{content}}
     </article>
   </main>
@@ -310,8 +321,8 @@ export class TemplateEngine {
     <main class="notebook-content">
       <header class="notebook-header">
         <h1>{{title}}</h1>
-        {{#if lastModified}}
-        <time>{{lastModified}}</time>
+        {{#if date}}
+        <time>{{date}}</time>
         {{/if}}
       </header>
       
@@ -356,8 +367,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-text);
-  margin-bottom: var(--spacing-unit);
-  line-height: 1.3;
+  margin-top: 1rem;
 }
 
 h1 { font-size: 2.25rem; }

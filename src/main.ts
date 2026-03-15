@@ -77,13 +77,13 @@ export default class ArrowheadPlugin extends Plugin {
   private async openPreview(): Promise<void> {
     const fileExporter = new FileExporter(this);
 
-    const validation = await fileExporter.validateOutputPath();
+    const validation = fileExporter.validateOutputPath();
     if (!validation.valid) {
       new Notice(`Invalid output path: ${validation.error}`);
       return;
     }
 
-    const outputPath = await fileExporter.getAbsoluteOutputPath();
+    const outputPath = fileExporter.getAbsoluteOutputPath();
 
     if (!isServerRunning()) {
       await startServer(outputPath, this.settings.previewServerPort);
@@ -118,13 +118,13 @@ export default class ArrowheadPlugin extends Plugin {
     } else {
       const fileExporter = new FileExporter(this);
       
-      const validation = await fileExporter.validateOutputPath();
+      const validation = fileExporter.validateOutputPath();
       if (!validation.valid) {
         new Notice(`Invalid output path: ${validation.error}`);
         return;
       }
 
-      const outputPath = await fileExporter.getAbsoluteOutputPath();
+      const outputPath = fileExporter.getAbsoluteOutputPath();
       await startServer(outputPath, this.settings.previewServerPort);
       this.settings.autoRegenerate = true;
       await this.saveSettings();
