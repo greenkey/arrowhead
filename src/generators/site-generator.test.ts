@@ -46,11 +46,20 @@ describe('MarkdownProcessor', () => {
     expect(result).toMatch(/<ul><li>Item 1<\/li><li>Item 2<\/li><li>Item 3<\/li><\/ul>/);
   });
 
-  it('should add <br> tags for line breaks outside HTML elements', () => {
+  it('should wrap lines in <p> tags with <br> for line breaks', () => {
     const processor = createProcessor();
     const result = processor.processMarkdownSyntax('Line 1\nLine 2');
     
-    expect(result).toContain('Line 1<br>Line 2');
+    expect(result).toContain('<p>Line 1<br>Line 2</p>');
+  });
+
+  it('should wrap multiple lines as separate paragraphs', () => {
+    const processor = createProcessor();
+    const result = processor.processMarkdownSyntax('First paragraph\n\nSecond paragraph\n\nThird paragraph');
+    
+    expect(result).toContain('<p>First paragraph</p>');
+    expect(result).toContain('<p>Second paragraph</p>');
+    expect(result).toContain('<p>Third paragraph</p>');
   });
 
   it('should process markdown emphasis correctly', () => {

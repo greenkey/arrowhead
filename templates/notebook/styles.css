@@ -98,8 +98,7 @@ body {
 .notebook-body h4,
 .notebook-body h5,
 .notebook-body h6 {
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
+  margin-top: 1rem;
 }
 
 .notebook-body h1 { font-size: 1.8rem; }

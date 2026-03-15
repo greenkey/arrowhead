@@ -101,6 +101,7 @@ export class MarkdownProcessor {
     while (i < lines.length) {
       const line = lines[i];
       if (!line) {
+        resultLines.push('');
         i++;
         continue;
       }
@@ -112,15 +113,15 @@ export class MarkdownProcessor {
         i++;
         continue;
       }
-      
+
+      // ... rest of list processing
       const baseIndent = listMatch[1]?.length ?? 0;
       const listItems: { indent: number; text: string }[] = [];
-      
+
       while (i < lines.length) {
         const currentLine = lines[i];
         if (!currentLine) {
-          i++;
-          continue;
+          break;
         }
         
         const currentMatch = currentLine.match(/^(\s*)([-*+]) (.+)$/);
@@ -140,7 +141,7 @@ export class MarkdownProcessor {
         listItems.push({ indent: relativeIndent, text: itemText });
         i++;
       }
-      
+
       if (listItems.length > 0) {
         const nestedHtml = this.buildNestedListFromItems(listItems);
         resultLines.push(nestedHtml);
@@ -197,43 +198,56 @@ export class MarkdownProcessor {
   }
 
   replaceNewlinesOutsideHtml(content: string): string {
-    let result = '';
-    let i = 0;
-    let depth = 0;
+    const headerRegex = /<h[1-6][^>]*>.*?<\/h[1-6]>/gi;
+    const headers: { start: number; end: number; tag: string }[] = [];
+    let match;
     
-    while (i < content.length) {
-      const char = content[i];
-      
-      if (char === '<') {
-        if (content.slice(i).startsWith('</')) {
-          const closeTagMatch = content.slice(i).match(/^<\/([a-zA-Z][a-zA-Z0-9]*)>/);
-          if (closeTagMatch) {
-            depth = Math.max(0, depth - 1);
-            result += content.slice(i, i + closeTagMatch[0].length);
-            i += closeTagMatch[0].length;
-            continue;
-          }
-        } else {
-          const openTagMatch = content.slice(i).match(/^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/);
-          if (openTagMatch) {
-            depth++;
-            result += content.slice(i, i + openTagMatch[0].length);
-            i += openTagMatch[0].length;
-            continue;
-          }
+    while ((match = headerRegex.exec(content)) !== null) {
+      headers.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        tag: match[0]
+      });
+    }
+    
+    let result = '';
+    let lastEnd = 0;
+    
+    for (const header of headers) {
+      if (header.start > lastEnd) {
+        const beforeHeader = content.slice(lastEnd, header.start);
+        if (beforeHeader.trim()) {
+          result += this.wrapInParagraphs(beforeHeader);
         }
-        result += char;
-        i++;
-        continue;
       }
-      
-      if (char === '\n' && depth === 0) {
-        result += '<br>';
-      } else {
-        result += char;
+      result += header.tag;
+      lastEnd = header.end;
+    }
+    
+    if (lastEnd < content.length) {
+      const remaining = content.slice(lastEnd);
+      if (remaining.trim()) {
+        result += this.wrapInParagraphs(remaining);
       }
+    }
+    
+    return result;
+  }
+
+  private wrapInParagraphs(text: string): string {
+    const paragraphs = text.split(/\n\n+/);
+    let result = '';
+    
+    for (const para of paragraphs) {
+      const trimmed = para.trim();
+      if (!trimmed) continue;
       
-      i++;
+      const lines = trimmed.split('\n');
+      const wrappedLines = lines.map(line => line.trim()).filter(line => line);
+      
+      if (wrappedLines.length > 0) {
+        result += '<p>' + wrappedLines.join('<br>') + '</p>';
+      }
     }
     
     return result;

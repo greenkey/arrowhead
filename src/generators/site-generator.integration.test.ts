@@ -374,6 +374,8 @@ title: List Test
 
 Regular text with line break.
 Second line of text.
+
+Third line, separated, will be a different paragraph.
 `,
           frontmatter: { title: 'List Test' },
           tags: [],
@@ -397,16 +399,16 @@ Second line of text.
       expect(htmlContent).toContain('<li>Item 3</li>');
       expect(htmlContent).toContain('</ul>');
       
-      // Ensure <br> tags are NOT between list items
+      // Ensure list items are not wrapped in <p> tags
       const listSectionMatch = htmlContent.match(/<ul>[\s\S]*?<\/ul>/);
       expect(listSectionMatch).not.toBeNull();
       
       const listSection = listSectionMatch![0];
-      expect(listSection).not.toContain('<br>');
+      expect(listSection).not.toContain('<p>');
       
-      // Ensure <br> tags ARE present in regular text sections
-      expect(htmlContent).toContain('<br>');
-      expect(htmlContent).toContain('Regular text with line break.<br>Second line of text.');
+      // Ensure <p> tags ARE present in regular text sections
+      expect(htmlContent).toContain('<p>Regular text with line break.<br>Second line of text.');
+      expect(htmlContent).toContain('<p>Third line, separated, will be a different paragraph.');
     });
 
     it('should handle nested bullet points', async () => {

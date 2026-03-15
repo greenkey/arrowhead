@@ -367,8 +367,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-text);
-  margin-bottom: var(--spacing-unit);
-  line-height: 1.3;
+  margin-top: 1rem;
 }
 
 h1 { font-size: 2.25rem; }
