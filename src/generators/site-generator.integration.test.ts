@@ -61,7 +61,15 @@ describe('SiteGenerator Integration Tests', () => {
         }
       }),
       getBasePath: vi.fn().mockReturnValue(vaultPath),
-      cachedRead: vi.fn().mockResolvedValue('')
+      cachedRead: vi.fn().mockImplementation(async (filePath: string) => {
+        if (filePath.startsWith('templates/')) {
+          const templateFile = path.join(__dirname, '..', '..', filePath);
+          if (fs.existsSync(templateFile)) {
+            return fs.readFileSync(templateFile, 'utf-8');
+          }
+        }
+        return '';
+      })
     };
 
     return {
@@ -79,14 +87,30 @@ describe('SiteGenerator Integration Tests', () => {
         previewServerPort: 3000,
         autoRegenerate: false,
         postsFolder: 'posts',
-        pagesFolder: 'pages'
+        pagesFolder: 'pages',
+        template: 'default'
       },
       app: {
         vault: {
           adapter,
           getName: () => 'test-vault',
+          cachedRead: vi.fn().mockImplementation(async (file: unknown) => {
+            if (typeof file === 'object' && file !== null && 'path' in file) {
+              const filePath = (file as { path: string }).path;
+              if (filePath.startsWith('templates/')) {
+                const templateFile = path.join(__dirname, '..', '..', filePath);
+                if (fs.existsSync(templateFile)) {
+                  return fs.readFileSync(templateFile, 'utf-8');
+                }
+              }
+            }
+            return '';
+          }),
           getAbstractFileByPath: (filePath: string) => {
             if (filePath.endsWith('.jpg') || filePath.endsWith('.png') || filePath.endsWith('.gif')) {
+              return mockFile(filePath, path.basename(filePath));
+            }
+            if (filePath.startsWith('templates/')) {
               return mockFile(filePath, path.basename(filePath));
             }
             return null;
@@ -172,8 +196,9 @@ describe('SiteGenerator Integration Tests', () => {
           path: 'pages/test-page.md',
           name: 'test-page.md',
           extension: 'md',
-          content: '---\ntitle: Test Page\n---\n# Test Page\nThis is test content',
-          frontmatter: { title: 'Test Page' },
+          content: '---\ntitle: Test Page\ndate: 2024-01-15\n---\n# Test Page\nThis is test content',
+          frontmatter: { title: 'Test Page', date: '2024-01-15' },
+          mattermost: { date: '2024-01-15' },
           tags: [],
           links: [],
           embeds: [],
@@ -192,6 +217,8 @@ describe('SiteGenerator Integration Tests', () => {
       const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
       expect(htmlContent).toContain('Test Page');
       expect(htmlContent).toContain('This is test content');
+      expect(htmlContent).toContain('2024-01-15');
+      expect(htmlContent).toContain('post-meta');
     });
 
     it('should copy template CSS to output', async () => {

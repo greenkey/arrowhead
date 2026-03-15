@@ -249,10 +249,17 @@ hr {
 }
 
 .post-card-date {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--color-text-light);
-  margin-bottom: 0.5rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+
+.post-meta {
+  margin-bottom: var(--spacing-unit);
+  color: var(--color-muted);
+}
+
+.post-meta time {
+  font-size: 0.875rem;
 }
 
 .post-card-tags {

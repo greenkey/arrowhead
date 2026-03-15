@@ -62,8 +62,8 @@ export class SiteGenerator {
     const contentWithTitle = `<h1 class="page-title">${pageTitle}</h1>\n${processedContent}`;
 
     const dateStr = fileData.mattermost?.date 
-      ? fileData.mattermost.date 
-      : new Date(fileData.created).toISOString();
+      ? fileData.mattermost.date.substring(0, 10)
+      : new Date(fileData.created).toISOString().substring(0, 10);
 
     const html = await this.wrapInTemplate({
       title: pageTitle,
