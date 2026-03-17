@@ -62,7 +62,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, 'output');
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.validateOutputPath();
+      const result = fileExporter.validateOutputPath();
 
       expect(result.valid).toBe(true);
       expect(result.resolvedPath).toBe(path.join(vaultPath, 'output'));
@@ -77,7 +77,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, '/tmp/external-output');
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.validateOutputPath();
+      const result = fileExporter.validateOutputPath();
 
       expect(result.valid).toBe(true);
       expect(result.resolvedPath).toBe('/tmp/external-output');
@@ -93,7 +93,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, path.join(vaultPath, 'output'));
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.validateOutputPath();
+      const result = fileExporter.validateOutputPath();
 
       expect(result.valid).toBe(true);
       expect(result.resolvedPath).toBe(path.join(vaultPath, 'output'));
@@ -111,7 +111,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, '~/.arrowhead-output');
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.validateOutputPath();
+      const result = fileExporter.validateOutputPath();
 
       expect(result.valid).toBe(true);
       expect(result.resolvedPath).toBe(homeOutput);
@@ -129,7 +129,7 @@ describe('FileExporter Integration Tests', () => {
       (mockPlugin as any).getAdapter = () => null;
 
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.validateOutputPath();
+      const result = fileExporter.validateOutputPath();
 
       expect(result.valid).toBe(false);
       expect(result.error).toContain('Unable to access');
@@ -146,7 +146,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, 'output');
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.getAbsoluteOutputPath();
+      const result = fileExporter.getAbsoluteOutputPath();
 
       expect(result).toBe(path.join(vaultPath, 'output'));
 
@@ -160,7 +160,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, '/absolute/path/output');
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.getAbsoluteOutputPath();
+      const result = fileExporter.getAbsoluteOutputPath();
 
       expect(result).toBe('/absolute/path/output');
 
@@ -174,7 +174,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, '~/my-output');
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.getAbsoluteOutputPath();
+      const result = fileExporter.getAbsoluteOutputPath();
 
       expect(result).toBe(path.join(os.homedir(), 'my-output'));
 
@@ -188,7 +188,7 @@ describe('FileExporter Integration Tests', () => {
 
       const mockPlugin = createFileExporterMockPlugin(vaultPath, path.join(vaultPath, 'output'));
       const fileExporter = new FileExporter(mockPlugin as any);
-      const result = await fileExporter.getAbsoluteOutputPath();
+      const result = fileExporter.getAbsoluteOutputPath();
 
       expect(result).toBe(path.join(vaultPath, 'output'));
 

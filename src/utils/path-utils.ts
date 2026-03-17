@@ -16,16 +16,16 @@ export function validateOutputPath(inputPath: string, vaultPath: string): Valida
     return { valid: false, resolvedPath: "", error: "Output path cannot be empty" };
   }
 
+  if (inputPath.includes("..")) {
+    return { valid: false, resolvedPath: "", error: "Output path cannot contain parent directory references (..)" };
+  }
+
   let resolvedPath: string;
 
   if (isAbsolutePath(inputPath)) {
     resolvedPath = inputPath.replace("~", os.homedir());
   } else {
-    resolvedPath = `${vaultPath}/${inputPath}`;
-  }
-
-  if (resolvedPath.includes("..")) {
-    return { valid: false, resolvedPath, error: "Output path cannot contain parent directory references (..)" };
+    resolvedPath = path.join(vaultPath, inputPath);
   }
 
   return { valid: true, resolvedPath };

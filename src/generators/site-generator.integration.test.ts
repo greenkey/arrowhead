@@ -61,7 +61,15 @@ describe('SiteGenerator Integration Tests', () => {
         }
       }),
       getBasePath: vi.fn().mockReturnValue(vaultPath),
-      cachedRead: vi.fn().mockResolvedValue('')
+      cachedRead: vi.fn().mockImplementation(async (filePath: string) => {
+        if (filePath.startsWith('templates/')) {
+          const templateFile = path.join(__dirname, '..', '..', filePath);
+          if (fs.existsSync(templateFile)) {
+            return fs.readFileSync(templateFile, 'utf-8');
+          }
+        }
+        return '';
+      })
     };
 
     return {
@@ -79,15 +87,34 @@ describe('SiteGenerator Integration Tests', () => {
         previewServerPort: 3000,
         autoRegenerate: false,
         postsFolder: 'posts',
-        pagesFolder: 'pages'
+        pagesFolder: 'pages',
+        template: 'default'
       },
       app: {
         vault: {
           adapter,
           getName: () => 'test-vault',
+          cachedRead: vi.fn().mockImplementation(async (file: unknown) => {
+            if (typeof file === 'object' && file !== null && 'path' in file) {
+              const filePath = (file as { path: string }).path;
+              if (filePath.startsWith('templates/')) {
+                const templateFile = path.join(__dirname, '..', '..', filePath);
+                if (fs.existsSync(templateFile)) {
+                  return fs.readFileSync(templateFile, 'utf-8');
+                }
+              }
+            }
+            return '';
+          }),
           getAbstractFileByPath: (filePath: string) => {
             if (filePath.endsWith('.jpg') || filePath.endsWith('.png') || filePath.endsWith('.gif')) {
               return mockFile(filePath, path.basename(filePath));
+            }
+            if (filePath.startsWith('templates/')) {
+              const templateFile = path.join(__dirname, '..', '..', filePath);
+              if (fs.existsSync(templateFile)) {
+                return mockFile(filePath, path.basename(filePath));
+              }
             }
             return null;
           }
@@ -142,6 +169,7 @@ describe('SiteGenerator Integration Tests', () => {
           extension: 'md',
           content: '---\ntitle: Hello World\ndate: 2024-01-15\n---\nHello from my first post!',
           frontmatter: { title: 'Hello World', date: '2024-01-15' },
+          mattermost: { date: '2024-01-15' },
           tags: ['test'],
           links: [],
           embeds: [],
@@ -172,8 +200,9 @@ describe('SiteGenerator Integration Tests', () => {
           path: 'pages/test-page.md',
           name: 'test-page.md',
           extension: 'md',
-          content: '---\ntitle: Test Page\n---\n# Test Page\nThis is test content',
-          frontmatter: { title: 'Test Page' },
+          content: '---\ntitle: Test Page\ndate: 2024-01-15\n---\n# Test Page\nThis is test content',
+          frontmatter: { title: 'Test Page', date: '2024-01-15' },
+          mattermost: { date: '2024-01-15' },
           tags: [],
           links: [],
           embeds: [],
@@ -192,6 +221,8 @@ describe('SiteGenerator Integration Tests', () => {
       const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
       expect(htmlContent).toContain('Test Page');
       expect(htmlContent).toContain('This is test content');
+      expect(htmlContent).toContain('2024-01-15');
+      expect(htmlContent).toContain('post-meta');
     });
 
     it('should copy template CSS to output', async () => {
@@ -292,6 +323,9 @@ title: Markdown Test
 # Main Header
 ## Sub Header
 ### Sub Sub Header
+#### Level 4 Header
+##### Level 5 Header
+###### Level 6 Header
 
 **Bold text** and *italic text*
 
@@ -317,6 +351,9 @@ title: Markdown Test
       expect(htmlContent).toContain('<h1>Main Header</h1>');
       expect(htmlContent).toContain('<h2>Sub Header</h2>');
       expect(htmlContent).toContain('<h3>Sub Sub Header</h3>');
+      expect(htmlContent).toContain('<h4>Level 4 Header</h4>');
+      expect(htmlContent).toContain('<h5>Level 5 Header</h5>');
+      expect(htmlContent).toContain('<h6>Level 6 Header</h6>');
       expect(htmlContent).toContain('<strong>Bold text</strong>');
       expect(htmlContent).toContain('<em>italic text</em>');
     });
@@ -341,6 +378,8 @@ title: List Test
 
 Regular text with line break.
 Second line of text.
+
+Third line, separated, will be a different paragraph.
 `,
           frontmatter: { title: 'List Test' },
           tags: [],
@@ -364,16 +403,151 @@ Second line of text.
       expect(htmlContent).toContain('<li>Item 3</li>');
       expect(htmlContent).toContain('</ul>');
       
-      // Ensure <br> tags are NOT between list items
+      // Ensure list items are not wrapped in <p> tags
       const listSectionMatch = htmlContent.match(/<ul>[\s\S]*?<\/ul>/);
       expect(listSectionMatch).not.toBeNull();
       
       const listSection = listSectionMatch![0];
-      expect(listSection).not.toContain('<br>');
+      expect(listSection).not.toContain('<p>');
       
-      // Ensure <br> tags ARE present in regular text sections
-      expect(htmlContent).toContain('<br>');
-      expect(htmlContent).toContain('Regular text with line break.<br>Second line of text.');
+      // Ensure <p> tags ARE present in regular text sections
+      expect(htmlContent).toContain('<p>Regular text with line break.<br>Second line of text.');
+      expect(htmlContent).toContain('<p>Third line, separated, will be a different paragraph.');
+    });
+
+    it('should handle nested bullet points', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/nested-list.md',
+          name: 'nested-list.md',
+          extension: 'md',
+          content: `---
+title: Nested List Test
+---
+# Nested Lists
+
+- First level
+  - Second level
+    - Third level
+- Back to first
+`,
+          frontmatter: { title: 'Nested List Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'nested-list.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      expect(htmlContent).toContain('<ul>');
+      expect(htmlContent).toContain('First level');
+      expect(htmlContent).toContain('Second level');
+      expect(htmlContent).toContain('Third level');
+      expect(htmlContent).toContain('Back to first');
+      expect(htmlContent).toContain('</ul>');
+      
+      expect(htmlContent).toMatch(/<ul><li>First level<ul>/);
+      expect(htmlContent).toMatch(/<ul><li>Second level<ul>/);
+    });
+
+    it('should convert horizontal rules from markdown to HTML', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/hr-test.md',
+          name: 'hr-test.md',
+          extension: 'md',
+          content: `---
+title: Horizontal Rule Test
+---
+# Before hr
+
+---
+
+Content after hr
+
+---
+
+### After second hr
+`,
+          frontmatter: { title: 'Horizontal Rule Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'hr-test.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      expect(htmlContent).toContain('<h1>Before hr</h1>');
+      expect(htmlContent).toContain('<hr>');
+      expect(htmlContent).toContain('Content after hr');
+      expect(htmlContent).toContain('<h3>After second hr</h3>');
+    });
+
+    it('should convert *** and ___ horizontal rules to HTML', async () => {
+      const mockPlugin = createMockPlugin(outputPath);
+      const generator = new SiteGenerator(mockPlugin);
+
+      const vaultData = createVaultData([
+        {
+          path: 'pages/hr-alternatives.md',
+          name: 'hr-alternatives.md',
+          extension: 'md',
+          content: `---
+title: HR Alternatives Test
+---
+# Using asterisks
+
+***
+
+Content between
+
+___
+
+### Using underscores
+`,
+          frontmatter: { title: 'HR Alternatives Test' },
+          tags: [],
+          links: [],
+          embeds: [],
+          created: Date.now(),
+          modified: Date.now(),
+          size: 100,
+          pageType: 'page'
+        }
+      ]);
+
+      await generator.generate(vaultData, outputPath);
+
+      const htmlPath = path.join(outputPath, 'pages', 'hr-alternatives.html');
+      const htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+
+      const hrCount = (htmlContent.match(/<hr>/g) || []).length;
+      expect(hrCount).toBe(2);
+      expect(htmlContent).toContain('<h1>Using asterisks</h1>');
+      expect(htmlContent).toContain('Content between');
+      expect(htmlContent).toContain('<h3>Using underscores</h3>');
     });
   });
 
