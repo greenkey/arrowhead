@@ -26,7 +26,8 @@
     "test:integration:quiet": "vitest run --config vitest.integration.config.ts --silent",
     "test:all": "npm run test",
     "validate:manifest": "node scripts/validate-manifest.mjs",
-    "preflight": "npm run validate:manifest && npm run lint && npm run typecheck && npm run test"
+    "preflight": "npm run validate:manifest && npm run lint && npm run typecheck && npm run test",
+    "prepare": "cp hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push"
   },
   "keywords": [
     "obsidian",
