@@ -1,5 +1,5 @@
 import type ArrowheadPlugin from "../main";
-import { isAbsolutePath, validateOutputPath, resolveOutputPath, getRelativeOutputPath, type ValidationResult } from "../utils/path-utils";
+import { validateOutputPath, resolveOutputPath, getRelativeOutputPath, type ValidationResult } from "../utils/path-utils";
 
 export class FileExporter {
   private plugin: ArrowheadPlugin;

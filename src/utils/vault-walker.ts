@@ -121,7 +121,10 @@ export class VaultWalker {
         if (!tags.has(tag)) {
           tags.set(tag, []);
         }
-        tags.get(tag)!.push(fileData);
+        const tagFiles = tags.get(tag);
+        if (tagFiles) {
+          tagFiles.push(fileData);
+        }
       }
 
       for (const link of fileData.links) {
@@ -198,7 +201,7 @@ export class VaultWalker {
     };
   }
 
-  private extractMattermostMetadata(frontmatter: Record<string, unknown>, created: number): MattermostMetadata | undefined {
+  private extractMattermostMetadata(frontmatter: Record<string, unknown>, _created: number): MattermostMetadata | undefined {
     const dateField = frontmatter.date;
 
     if (!dateField) {
@@ -233,7 +236,7 @@ export class VaultWalker {
     return [...new Set(tags)];
   }
 
-  private extractLinks(content: string, metadata: CachedMetadata): OutgoingLink[] {
+  private extractLinks(content: string, _metadata: CachedMetadata): OutgoingLink[] {
     const links: OutgoingLink[] = [];
     
     const wikiLinkRegex = /\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
