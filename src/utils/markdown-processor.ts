@@ -239,12 +239,19 @@ export class MarkdownProcessor {
   }
 
   private wrapInParagraphs(text: string): string {
+    const blockLevelTags = ['<ul', '<ol', '<hr', '<img', '<blockquote', '<pre', '<table', '<div'];
     const paragraphs = text.split(/\n\n+/);
     let result = '';
     
     for (const para of paragraphs) {
       const trimmed = para.trim();
       if (!trimmed) continue;
+      
+      const isBlockLevel = blockLevelTags.some(tag => trimmed.toLowerCase().startsWith(tag));
+      if (isBlockLevel) {
+        result += trimmed;
+        continue;
+      }
       
       const lines = trimmed.split('\n');
       const wrappedLines = lines.map(line => line.trim()).filter(line => line);
@@ -273,7 +280,9 @@ export class MarkdownProcessor {
     
     let processedContent = content;
     for (const [original, replacement] of linkMap) {
-      processedContent = processedContent.replace(original, replacement);
+      const escapedOriginal = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapedOriginal, 'g');
+      processedContent = processedContent.replace(regex, replacement);
     }
     
     return processedContent;
@@ -290,8 +299,10 @@ export class MarkdownProcessor {
       if (embed.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
         const assetPath = this.embedToAssetPath(embed);
         const imgTag = `<img src="${assetPath}" alt="${embed}" loading="lazy">`;
-        processed = processed.replace(`![[${embed}]]`, imgTag);
-        processed = processed.replace(`![](${embed})`, imgTag);
+        const embedPattern = `![[${embed}]]`;
+        const imgPattern = `![](${embed})`;
+        processed = processed.split(embedPattern).join(imgTag);
+        processed = processed.split(imgPattern).join(imgTag);
       }
     }
 
