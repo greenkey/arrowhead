@@ -1,34 +1,5 @@
 # System Architecture
 
-## Core Components
-
-```
-Obsidian Plugin
-     │
-     ├── main.ts          ← Plugin entry point, Obsidian lifecycle
-     │
-     ├── settings/        ← Configuration management
-     │    ├── settings.ts    ← Settings interface & defaults
-     │    └── settings-tab.ts ← UI settings screen
-     │
-     ├── generators/      ← Core generation logic
-     │    └── site-generator.ts ← Orchestrates the full pipeline
-     │
-     ├── exporters/       ← File operations
-     │    └── file-exporter.ts  ← File system operations
-     │
-     ├── utils/           ← Utility functions
-     │    ├── vault-walker.ts   ← Scans & categorizes vault files
-     │    ├── path-resolver.ts  ← Path validation & resolution
-     │    ├── template-engine.ts← Template processing
-     │    └── preview-server.ts ← HTTP server for preview
-     │
-     ├── ui/              ← User interface
-     │    └── export-modal.ts   ← Export progress modal
-     │
-     └── types.ts         ← Core type definitions
-```
-
 ## Data Flow
 
 ```
@@ -37,7 +8,7 @@ Vault Files (markdown, assets)
         ▼
    ┌─────────────────┐
    │   Vault Walker  │  ← Scans vault, extracts metadata
-   │  (vault-walker) │
+   │  (vault-walker)│
    └────────┬────────┘
             │
             ▼

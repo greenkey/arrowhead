@@ -1,8 +1,9 @@
 import ArrowheadPlugin from "../main";
 import type { VaultData, VaultFile } from "../utils/vault-walker";
-import { isAbsolutePath } from "../settings/settings";
+import { isAbsolutePath, getOutputPath, pathToUrl as pathToUrlUtil } from "../utils/path-utils";
 import { TemplateEngine } from "../utils/template-engine";
 import type { TemplateData } from "../utils/template-engine";
+import { MarkdownProcessor } from "../utils/markdown-processor";
 import * as fs from "fs";
 import * as path from "path";
 import { TFile } from "obsidian";
@@ -14,10 +15,15 @@ function isTFile(file: unknown): file is TFile {
 export class SiteGenerator {
   private plugin: ArrowheadPlugin;
   private templateEngine: TemplateEngine;
+  private markdownProcessor: MarkdownProcessor;
 
   constructor(plugin: ArrowheadPlugin) {
     this.plugin = plugin;
     this.templateEngine = new TemplateEngine(plugin);
+    this.markdownProcessor = new MarkdownProcessor({
+      processWikilinks: plugin.settings.processWikilinks,
+      processEmbeds: plugin.settings.processEmbeds
+    });
   }
 
   async generate(vaultData: VaultData, outputPath: string): Promise<void> {
@@ -45,19 +51,15 @@ export class SiteGenerator {
     }
   }
 
-  private removeFrontmatter(content: string): string {
-    const frontmatterRegex = /^---\n[\s\S]*?\n---\s*\n?/;
-    const result = content.replace(frontmatterRegex, "");
-    return result;
-  }
-
   private async generatePage(fileData: VaultFile, vaultData: VaultData, outputPath: string): Promise<void> {
-    const contentWithoutFrontmatter = this.removeFrontmatter(fileData.content);
-    const contentWithLinks = this.processLinks(contentWithoutFrontmatter, fileData, vaultData);
-    const processedEmbeds = this.processEmbeds(contentWithLinks, fileData, vaultData);
+    const processedContent = this.markdownProcessor.process(
+      fileData.content,
+      fileData.links,
+      fileData.embeds
+    );
 
     const pageTitle = this.getTitle(fileData);
-    const contentWithTitle = `<h1 class="page-title">${pageTitle}</h1>\n${processedEmbeds}`;
+    const contentWithTitle = `<h1 class="page-title">${pageTitle}</h1>\n${processedContent}`;
 
     const dateStr = fileData.mattermost?.date 
       ? fileData.mattermost.date 
@@ -72,158 +74,13 @@ export class SiteGenerator {
       lastModified: new Date(fileData.modified).toISOString()
     }, vaultData);
 
-    const relativePath = this.pathToUrl(fileData.path);
-    const outputFilePath = this.getOutputPath(relativePath);
+    const relativePath = pathToUrlUtil(fileData.path);
+    const outputFilePath = getOutputPath(relativePath);
 
     await this.ensureDirectory(outputPath, outputFilePath);
 
     const fullPath = `${outputPath}/${outputFilePath}`;
     await this.writeFile(fullPath, html);
-  }
-
-  private processMarkdown(content: string): string {
-    let processed = content;
-
-    if (this.plugin.settings.processWikilinks) {
-      processed = this.processWikiLinks(processed);
-    }
-
-    processed = this.processMarkdownSyntax(processed);
-
-    return processed;
-  }
-
-  private processWikiLinks(content: string): string {
-    return content.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, target, displayText) => {
-      const url = this.wikiLinkToUrl(target);
-      const text = displayText || target;
-      return `<a href="${url}">${text}</a>`;
-    });
-  }
-
-  private wikiLinkToUrl(wikiLink: string): string {
-    let url = wikiLink;
-
-    url = url.replace(/\s+/g, "-");
-    url = url.toLowerCase();
-    url = this.encodeUrlPath(url);
-
-    url = `/${url}.html`;
-
-    return url;
-  }
-
-  private encodeUrlPath(path: string): string {
-    return path.split('/')
-      .map(segment => encodeURIComponent(segment))
-      .join('/');
-  }
-
-  private processMarkdownSyntax(content: string): string {
-    let processed = content;
-    
-    processed = processed.replace(/^### (.+)$/gm, "<h3>$1</h3>");
-    processed = processed.replace(/^## (.+)$/gm, "<h2>$1</h2>");
-    processed = processed.replace(/^# (.+)$/gm, "<h1>$1</h1>");
-    
-    processed = processed.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    processed = processed.replace(/\*(.+?)\*/g, "<em>$1</em>");
-    processed = processed.replace(/`(.+?)`/g, "<code>$1</code>");
-    
-    processed = processed.replace(/^- (.+)$/gm, "<li>$1</li>");
-    processed = processed.replace(/(<li>.*?<\/li>\n*)+/g, (match) => "<ul>" + match.replace(/\n/g, '') + "</ul>");
-    
-    processed = this.replaceNewlinesOutsideHtml(processed);
-    
-    return processed;
-  }
-
-  private replaceNewlinesOutsideHtml(content: string): string {
-    let result = '';
-    let i = 0;
-    let depth = 0;
-    
-    while (i < content.length) {
-      const char = content[i];
-      
-      if (char === '<') {
-        if (content.slice(i).startsWith('</')) {
-          const closeTagMatch = content.slice(i).match(/^<\/([a-zA-Z][a-zA-Z0-9]*)>/);
-          if (closeTagMatch) {
-            depth = Math.max(0, depth - 1);
-            result += content.slice(i, i + closeTagMatch[0].length);
-            i += closeTagMatch[0].length;
-            continue;
-          }
-        } else {
-          const openTagMatch = content.slice(i).match(/^<([a-zA-Z][a-zA-Z0-9]*)([^>]*)>/);
-          if (openTagMatch) {
-            depth++;
-            result += content.slice(i, i + openTagMatch[0].length);
-            i += openTagMatch[0].length;
-            continue;
-          }
-        }
-        result += char;
-        i++;
-        continue;
-      }
-      
-      if (char === '\n' && depth === 0) {
-        result += '<br>';
-      } else {
-        result += char;
-      }
-      
-      i++;
-    }
-    
-    return result;
-  }
-
-  private processLinks(content: string, file: VaultFile, _vaultData: VaultData): string {
-    const linkMap = new Map<string, string>();
-    
-    for (const link of file.links) {
-      if (link.type === "wiki") {
-        const url = this.wikiLinkToUrl(link.target);
-        linkMap.set(link.originalText, `<a href="${url}">${link.displayText || link.target}</a>`);
-      } else if (link.type === "url") {
-        const target = link.target;
-        const text = link.displayText || target;
-        linkMap.set(link.originalText, `<a href="${target}" target="_blank" rel="noopener">${text}</a>`);
-      }
-    }
-    
-    let processedContent = content;
-    for (const [original, replacement] of linkMap) {
-      processedContent = processedContent.replace(original, replacement);
-    }
-    
-    return processedContent;
-  }
-
-  private processEmbeds(content: string, file: VaultFile, _vaultData: VaultData): string {
-    if (!this.plugin.settings.processEmbeds) {
-      return this.processMarkdown(content);
-    }
-
-    let processed = this.processMarkdown(content);
-
-    for (const embed of file.embeds) {
-      if (embed.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-        const assetPath = this.embedToAssetPath(embed);
-        const imgTag = `<img src="${assetPath}" alt="${embed}" loading="lazy">`;
-        processed = processed.replace(`![[${embed}]]`, imgTag);
-        processed = processed.replace(`![](${embed})`, imgTag);
-      }
-    }
-
-    return processed;
-  }
-
-  private embedToAssetPath(embed: string): string {
-    return `../assets/${embed}`;
   }
 
   private async wrapInTemplate(pageData: { title: string; content: string; frontmatter: Record<string, unknown>; date?: string; tags: string[]; lastModified: string }, vaultData?: VaultData): Promise<string> {
@@ -236,7 +93,7 @@ export class SiteGenerator {
       .filter(file => file.pageType === 'page')
       .sort((a, b) => this.getTitle(a).localeCompare(this.getTitle(b)))
       .map(file => {
-        const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
+        const url = "/" + getOutputPath(pathToUrlUtil(file.path));
         const title = this.getTitle(file);
         return { title, url };
       }) || [];
@@ -269,22 +126,9 @@ export class SiteGenerator {
     return file.name.replace(/\.md$/i, "");
   }
 
-private pathToUrl(path: string): string {
-    let url = path.replace(/\.md$/i, "");
-    url = url.replace(/\s+/g, "-");
-    url = url.toLowerCase();
-    url = this.encodeUrlPath(url);
-
-    return url;
-  }
-
-  private getOutputPath(relativePath: string): string {
-    return `${relativePath}.html`;
-  }
-
   private async generateIndex(vaultData: VaultData, outputPath: string): Promise<void> {
     const indexContent = vaultData.files.map(file => {
-      const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
+      const url = "/" + getOutputPath(pathToUrlUtil(file.path));
       const title = this.getTitle(file);
       return `<li><a href="${url}">${title}</a></li>`;
     }).join("\n");
@@ -337,14 +181,14 @@ private pathToUrl(path: string): string {
       })
       .slice(0, Math.min(10, vaultData.files.filter(f => f.pageType === 'post').length))
       .map(file => {
-        const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
+        const url = "/" + getOutputPath(pathToUrlUtil(file.path));
         const title = this.getTitle(file);
         const dateStr = file.mattermost?.date 
           ? file.mattermost.date 
           : new Date(file.created).toISOString();
         const date = dateStr.split("T")[0] || "";
         const tags = file.tags || [];
-        const contentWithoutFrontmatter = this.removeFrontmatter(file.content);
+        const contentWithoutFrontmatter = this.markdownProcessor.removeFrontmatter(file.content);
         const excerpt = contentWithoutFrontmatter.substring(0, 150).replace(/[#*`[\]]/g, "").trim();
         
         return { title, url, date, tags, excerpt };
@@ -354,7 +198,7 @@ private pathToUrl(path: string): string {
       .filter(file => file.pageType === 'page')
       .sort((a, b) => this.getTitle(a).localeCompare(this.getTitle(b)))
       .map(file => {
-        const url = "/" + this.getOutputPath(this.pathToUrl(file.path));
+        const url = "/" + getOutputPath(pathToUrlUtil(file.path));
         const title = this.getTitle(file);
         return { title, url };
       });
@@ -458,7 +302,7 @@ private pathToUrl(path: string): string {
   private async generateSitemap(vaultData: VaultData, outputPath: string): Promise<void> {
     const baseUrl = this.plugin.settings.siteUrl;
     const pages = vaultData.files.map(file => {
-      const path = this.getOutputPath(this.pathToUrl(file.path));
+      const path = getOutputPath(pathToUrlUtil(file.path));
       const dateStr = file.mattermost?.date 
         ? file.mattermost.date 
         : new Date(file.modified).toISOString();

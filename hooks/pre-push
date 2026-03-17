@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pre-push hook: runs checks before pushing
+
+echo "Running pre-push checks..."
+
+npm run preflight
+
+exit $?

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TemplateEngine, TemplateData } from './template-engine';
+import type ArrowheadPlugin from '../main';
 
 describe('TemplateEngine', () => {
   let engine: TemplateEngine;
-  let mockPlugin: unknown;
+  let mockPlugin: ArrowheadPlugin;
 
   beforeEach(() => {
     mockPlugin = {
@@ -13,7 +14,7 @@ describe('TemplateEngine', () => {
           cachedRead: vi.fn()
         }
       }
-    };
+    } as unknown as ArrowheadPlugin;
     engine = new TemplateEngine(mockPlugin);
   });
 

@@ -1,4 +1,5 @@
 import * as os from "os";
+import { isAbsolutePath, validateOutputPath, type ValidationResult } from "../utils/path-utils";
 
 export interface ArrowheadSettings {
   outputDirectory: string;
@@ -17,29 +18,8 @@ export interface ArrowheadSettings {
   pagesFolder: string;
 }
 
-export function isAbsolutePath(path: string): boolean {
-  return path.startsWith("/") || path.startsWith("~") || /^[a-zA-Z]:/.test(path);
-}
-
-export function validateOutputPath(path: string, vaultPath: string): { valid: boolean; resolvedPath: string; error?: string } {
-  if (!path || path.trim().length === 0) {
-    return { valid: false, resolvedPath: "", error: "Output path cannot be empty" };
-  }
-
-  let resolvedPath: string;
-
-  if (isAbsolutePath(path)) {
-    resolvedPath = path.replace("~", process.env.HOME || "");
-  } else {
-    resolvedPath = `${vaultPath}/${path}`;
-  }
-
-  if (resolvedPath.includes("..")) {
-    return { valid: false, resolvedPath, error: "Output path cannot contain parent directory references (..)" };
-  }
-
-  return { valid: true, resolvedPath };
-}
+export { isAbsolutePath, validateOutputPath };
+export type { ValidationResult };
 
 export const DEFAULT_SETTINGS: ArrowheadSettings = {
   outputDirectory: `${os.tmpdir()}/arrowhead-output`,

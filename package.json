@@ -24,7 +24,10 @@
     "test:quiet": "vitest run --silent",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:quiet": "vitest run --config vitest.integration.config.ts --silent",
-    "test:all": "npm run test"
+    "test:all": "npm run test",
+    "validate:manifest": "node scripts/validate-manifest.mjs",
+    "preflight": "npm run validate:manifest && npm run lint && npm run typecheck && npm run test",
+    "prepare": "cp hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push"
   },
   "keywords": [
     "obsidian",
@@ -36,12 +39,11 @@
   "author": "Arrowhead",
   "license": "MIT",
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@eslint/json": "^1.1.0",
+    "@eslint/js": "^9.17.0",
     "@microsoft/eslint-plugin-sdl": "^1.1.0",
     "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "@vitest/ui": "^4.0.18",
     "esbuild": "^0.20.0",
     "eslint": "^9.39.4",

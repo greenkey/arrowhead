@@ -77,13 +77,13 @@ export default class ArrowheadPlugin extends Plugin {
   private async openPreview(): Promise<void> {
     const fileExporter = new FileExporter(this);
 
-    const validation = await fileExporter.validateOutputPath();
+    const validation = fileExporter.validateOutputPath();
     if (!validation.valid) {
       new Notice(`Invalid output path: ${validation.error}`);
       return;
     }
 
-    const outputPath = await fileExporter.getAbsoluteOutputPath();
+    const outputPath = fileExporter.getAbsoluteOutputPath();
 
     if (!isServerRunning()) {
       await startServer(outputPath, this.settings.previewServerPort);
@@ -118,13 +118,13 @@ export default class ArrowheadPlugin extends Plugin {
     } else {
       const fileExporter = new FileExporter(this);
       
-      const validation = await fileExporter.validateOutputPath();
+      const validation = fileExporter.validateOutputPath();
       if (!validation.valid) {
         new Notice(`Invalid output path: ${validation.error}`);
         return;
       }
 
-      const outputPath = await fileExporter.getAbsoluteOutputPath();
+      const outputPath = fileExporter.getAbsoluteOutputPath();
       await startServer(outputPath, this.settings.previewServerPort);
       this.settings.autoRegenerate = true;
       await this.saveSettings();
@@ -157,7 +157,7 @@ export default class ArrowheadPlugin extends Plugin {
       return;
     }
 
-    const validation = await this.fileExporter.validateOutputPath();
+    const validation = this.fileExporter.validateOutputPath();
 
     if (!validation.valid) {
       new Notice(`Invalid output path: ${validation.error}`);
@@ -170,7 +170,7 @@ export default class ArrowheadPlugin extends Plugin {
     }
 
     try {
-      const outputPath = await this.fileExporter.getAbsoluteOutputPath();
+      const outputPath = this.fileExporter.getAbsoluteOutputPath();
       const relativeOutputPath = this.fileExporter.getRelativeOutputPath();
 
       const siteData = await this.vaultWalker.collectVaultData();
@@ -196,7 +196,7 @@ export default class ArrowheadPlugin extends Plugin {
   private debounceTimer: NodeJS.Timeout | null = null;
 
   private registerVaultEvents(): void {
-    this.registerEvent(this.app.vault.on("modify", async (file) => {
+    this.registerEvent(this.app.vault.on("modify", (file) => {
       if (this.settings.autoRegenerate && isServerRunning() && file.name.endsWith(".md")) {
         if (this.debounceTimer) {
           clearTimeout(this.debounceTimer);
@@ -208,10 +208,10 @@ export default class ArrowheadPlugin extends Plugin {
       }
     }));
 
-    this.registerEvent(this.app.vault.on("delete", (_file) => {
+    this.registerEvent(this.app.vault.on("delete", () => {
     }));
 
-    this.registerEvent(this.app.vault.on("rename", (_file, _oldPath) => {
+    this.registerEvent(this.app.vault.on("rename", () => {
     }));
   }
 
