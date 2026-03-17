@@ -48,8 +48,8 @@ export class ArrowheadSettingTab extends PluginSettingTab {
       .addText(text => this.createTextSetting(text, "siteDescription"));
 
     new Setting(containerEl)
-      .setName("Site url")
-      .setDesc("The full url where your site will be hosted (used for canonical urls)")
+      .setName("Site URL")
+      .setDesc("The full URL where your site will be hosted (used for canonical URLs)")
       .addText(text => this.createTextSetting(text, "siteUrl"));
   }
 
@@ -156,24 +156,24 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Posts folder")
-      .setDesc("Folder containing blog posts/timeline entries (default: posts)")
+      .setDesc("Location of the folder with blog posts and timeline entries")
       .addText(text => {
-        text.setPlaceholder("posts");
+        text.setPlaceholder("Posts");
         text.setValue(this.plugin.settings.postsFolder);
         text.onChange(async (value) => {
-          this.plugin.settings.postsFolder = value.trim() || "posts";
+          this.plugin.settings.postsFolder = value.trim() || "Posts";
           await this.plugin.saveSettings();
         });
       });
 
     new Setting(containerEl)
       .setName("Pages folder")
-      .setDesc("Folder containing static pages like About, Contact (default: pages)")
+      .setDesc("Location of the folder with static pages like about and contact")
       .addText(text => {
-        text.setPlaceholder("pages");
+        text.setPlaceholder("Pages");
         text.setValue(this.plugin.settings.pagesFolder);
         text.onChange(async (value) => {
-          this.plugin.settings.pagesFolder = value.trim() || "pages";
+          this.plugin.settings.pagesFolder = value.trim() || "Pages";
           await this.plugin.saveSettings();
         });
       });
@@ -220,9 +220,9 @@ export class ArrowheadSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Ignored folders")
-      .setDesc(`Comma-separated list of folders to exclude (e.g., _templates, ${this.plugin.app.vault.configDir})`)
+      .setDesc(`List of folders to exclude, separated by commas (e.g., _templates, ${this.plugin.app.vault.configDir})`)
       .addText(text => {
-        text.setPlaceholder("folder1, folder2, folder3");
+        text.setPlaceholder("Enter folder names");
         text.setValue(this.plugin.settings.ignoredFolders.join(", "));
         text.onChange(async (value) => {
           this.plugin.settings.ignoredFolders = value.split(",").map(s => s.trim()).filter(s => s);

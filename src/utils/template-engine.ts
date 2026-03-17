@@ -158,7 +158,11 @@ export class TemplateEngine {
               const value = itemObj[propKey];
               if (value === null || value === undefined) return "";
               if (typeof value === "object") return JSON.stringify(value);
-              return String(value);
+              if (typeof value === "string") return value;
+              if (typeof value === "number") return String(value);
+              if (typeof value === "boolean") return value ? "true" : "";
+              if (value === null || value === undefined) return "";
+              return JSON.stringify(value);
             });
           }
           

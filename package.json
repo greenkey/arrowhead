@@ -24,7 +24,9 @@
     "test:quiet": "vitest run --silent",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:quiet": "vitest run --config vitest.integration.config.ts --silent",
-    "test:all": "npm run test"
+    "test:all": "npm run test",
+    "validate:manifest": "node scripts/validate-manifest.mjs",
+    "preflight": "npm run validate:manifest && npm run lint && npm run typecheck && npm run test"
   },
   "keywords": [
     "obsidian",
