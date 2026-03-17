@@ -111,7 +111,10 @@ describe('SiteGenerator Integration Tests', () => {
               return mockFile(filePath, path.basename(filePath));
             }
             if (filePath.startsWith('templates/')) {
-              return mockFile(filePath, path.basename(filePath));
+              const templateFile = path.join(__dirname, '..', '..', filePath);
+              if (fs.existsSync(templateFile)) {
+                return mockFile(filePath, path.basename(filePath));
+              }
             }
             return null;
           }
@@ -166,6 +169,7 @@ describe('SiteGenerator Integration Tests', () => {
           extension: 'md',
           content: '---\ntitle: Hello World\ndate: 2024-01-15\n---\nHello from my first post!',
           frontmatter: { title: 'Hello World', date: '2024-01-15' },
+          mattermost: { date: '2024-01-15' },
           tags: ['test'],
           links: [],
           embeds: [],
