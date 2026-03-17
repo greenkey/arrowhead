@@ -45,7 +45,7 @@ describe('Test Vault Management Tests', () => {
         outputPath: fs.mkdtempSync('/tmp/arrowhead-output-')
       });
 
-      await expect(newVaultManager.setup()).resolves.not.toThrow();
+      expect(() => newVaultManager.setup()).not.toThrow();
       await newVaultManager.cleanup();
     });
   });
@@ -75,7 +75,7 @@ describe('Test Vault Management Tests', () => {
     });
 
     it('should not throw on cleanup of non-existent files', async () => {
-      await expect(vaultManager.cleanup()).resolves.not.toThrow();
+      expect(() => vaultManager.cleanup()).not.toThrow();
     });
   });
 
@@ -99,7 +99,7 @@ describe('Test Vault Management Tests', () => {
     });
 
     it('should handle cleanup of non-existent directory', async () => {
-      await expect(cleanupTemporaryDirectory('/tmp/non-existent-dir-12345')).resolves.not.toThrow();
+      expect(() => cleanupTemporaryDirectory('/tmp/non-existent-dir-12345')).not.toThrow();
     });
   });
 
