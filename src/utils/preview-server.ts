@@ -146,6 +146,7 @@ function tryStartServer(outputDir: string, port: number): Promise<number> {
 }
 
 export async function stopServer(): Promise<void> {
+  _hasGeneratedSinceServerStart = false;
   return new Promise((resolve, reject) => {
     if (server) {
       const serverRef = server;
